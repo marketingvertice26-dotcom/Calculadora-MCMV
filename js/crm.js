@@ -134,6 +134,10 @@ window.CRM = (function () {
         estimativaFinanciamentoMin: est.faixaFinanciamento ? est.faixaFinanciamento.min : null,
         estimativaFinanciamentoMax: est.faixaFinanciamento ? est.faixaFinanciamento.max : null,
         estimativaImovel: est.valorImovel ? Math.round(est.valorImovel) : null,
+        valorMinimoImovel: est.valorMinimoImovel || null,
+        imovelReferenciaDaConta: est.imovelReferencia ? Math.round(est.imovelReferencia) : null,
+        entradaNecessaria: est.entradaNecessaria != null ? Math.round(est.entradaNecessaria) : null,
+        complementoEntrada: est.complementoEntrada != null ? Math.round(est.complementoEntrada) : null,
         estimativaImovelMin: est.faixaImovel ? est.faixaImovel.min : null,
         estimativaImovelMax: est.faixaImovel ? est.faixaImovel.max : null,
         parcelaEstimada: est.parcelaEstimada ? Math.round(est.parcelaEstimada) : null,
@@ -193,13 +197,17 @@ window.CRM = (function () {
     linhas.push('Já tentou financiar: ' + (ROTULOS.jaFinanciou[r.jaFinanciou] || 'Não informado') +
       (interno && r.jaFinanciou === 'nao-consegui' ? ' (vale perguntar o motivo)' : ''));
 
-    if (est.faixaFinanciamento) {
+    if (est.status === 'estimado') {
       linhas.push('Estimativa de financiamento: ' + textoFaixa(est.faixaFinanciamento));
       linhas.push('Estimativa de imóvel: ' + textoFaixa(est.faixaImovel));
     } else if (est.status === 'fora-das-faixas') {
       linhas.push('Renda acima das faixas configuradas. Avaliar outras linhas.');
-    } else if (est.status === 'depende-de-recursos') {
-      linhas.push('Renda comporta parcela, mas faltam recursos para entrada.');
+    } else if (est.status === 'abaixo-do-minimo') {
+      linhas.push('Estimativa abaixo do imóvel mínimo (' + brl(est.valorMinimoImovel) + '). Financiamento pela renda: ' + textoFaixa(est.faixaFinanciamento));
+    }
+    if (est.imovelReferencia) {
+      linhas.push('Entrada estimada: ' + brl(est.entradaNecessaria) +
+        (est.complementoEntrada > 0 ? ' (faltam cerca de ' + brl(est.complementoEntrada) + ')' : ' (coberta)'));
     }
 
     return linhas.join('\n');

@@ -430,14 +430,20 @@
       html += linhaDado('Subsídio considerado', 'até ' + brl(est.subsidioEstimado), { nota: 'Depende das regras do programa' });
     }
 
+    const notaParcela = { nota: 'Prazo de ' + Math.round(est.prazoMeses / 12) + ' anos. Valor aproximado' };
+
     if (est.status === 'estimado') {
       html +=
-        linhaDado('Estimativa de faixa de financiamento', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
         linhaDado('Estimativa de faixa de imóvel', window.CRM.textoFaixa(est.faixaImovel), { destaque: true }) +
-        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês',
-          { nota: 'Prazo de ' + Math.round(est.prazoMeses / 12) + ' anos. Valor aproximado' });
-    } else if (est.status === 'depende-de-recursos') {
-      html += linhaDado('Estimativa de faixa de financiamento', 'Depende de recursos para entrada', { vazio: true, nota: 'Um especialista pode avaliar alternativas' });
+        linhaDado('Estimativa de faixa de financiamento', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês', notaParcela) +
+        linhaEntrada(est);
+    } else if (est.status === 'abaixo-do-minimo') {
+      html +=
+        linhaDado('Imóveis disponíveis', 'a partir de ' + brl(est.valorMinimoImovel), { destaque: true }) +
+        linhaDado('Financiamento estimado pela sua renda', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês', notaParcela) +
+        linhaEntrada(est);
     } else {
       html += linhaDado('Estimativa de faixa de financiamento', 'Precisa de análise personalizada', { vazio: true });
     }
@@ -446,9 +452,13 @@
     montarComposicao(est, r);
 
     // Próximo passo
-    $('#resProximoTexto').textContent = est.status === 'estimado'
-      ? 'Sua estimativa aponta para imóveis entre ' + window.CRM.textoFaixa(est.faixaImovel) + '. Descubra quais possibilidades podem fazer sentido para o seu perfil.'
-      : 'Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.';
+    let proximo = 'Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.';
+    if (est.status === 'estimado') {
+      proximo = 'Sua estimativa aponta para imóveis entre ' + window.CRM.textoFaixa(est.faixaImovel) + '. Descubra quais possibilidades podem fazer sentido para o seu perfil.';
+    } else if (est.status === 'abaixo-do-minimo') {
+      proximo = 'Os imóveis começam em ' + brl(est.valorMinimoImovel) + '. Descubra com um especialista quais caminhos podem aproximar você desse valor.';
+    }
+    $('#resProximoTexto').textContent = proximo;
 
     // Mensagem
     const d = estado.diagnostico;
@@ -461,20 +471,33 @@
     montarFatores(est, r);
   }
 
+  // Entrada estimada para o imóvel e quanto falta além do que a pessoa informou
+  function linhaEntrada(est) {
+    if (est.complementoEntrada > 0) {
+      return linhaDado('Entrada estimada para esse imóvel', brl(est.entradaNecessaria),
+          { nota: 'Parte que o financiamento não cobre' }) +
+        linhaDado('Diferença a complementar', 'cerca de ' + brl(est.complementoEntrada),
+          { vazio: true, nota: 'Em muitos empreendimentos dá para parcelar. O especialista confirma' });
+    }
+    return linhaDado('Entrada estimada para esse imóvel', brl(est.entradaNecessaria),
+      { nota: 'Coberta pelo que você informou' });
+  }
+
   function montarComposicao(est, r) {
     const alvo = $('#composicao');
-    if (est.status !== 'estimado' || !est.valorImovel) { alvo.innerHTML = ''; return; }
+    if ((est.status !== 'estimado' && est.status !== 'abaixo-do-minimo') || !est.imovelReferencia) { alvo.innerHTML = ''; return; }
 
     const partes = [
       { nome: 'Financiamento', valor: est.financiamento, cls: 'c-fin' },
       { nome: 'Entrada', valor: r.entradaResposta === 'sim' ? r.entradaValor : 0, cls: 'c-ent' },
       { nome: 'FGTS', valor: r.fgtsResposta === 'sim' ? r.fgtsValor : 0, cls: 'c-fgts' },
-      { nome: 'Subsídio', valor: est.subsidioEstimado, cls: 'c-sub' }
+      { nome: 'Subsídio', valor: est.subsidioEstimado, cls: 'c-sub' },
+      { nome: 'A complementar', valor: est.complementoEntrada, cls: 'c-falta' }
     ].filter(function (p) { return p.valor > 0; });
 
     const total = partes.reduce(function (s, p) { return s + p.valor; }, 0) || 1;
     alvo.innerHTML =
-      '<p class="composicao-titulo">Como a estimativa se forma</p>' +
+      '<p class="composicao-titulo">Como fecha um imóvel de ' + brl(est.imovelReferencia) + '</p>' +
       '<div class="composicao-barra">' + partes.map(function (p) {
         return '<span class="' + p.cls + '" style="width:' + (p.valor / total * 100) + '%"></span>';
       }).join('') + '</div>' +

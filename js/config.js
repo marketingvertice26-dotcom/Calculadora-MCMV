@@ -30,8 +30,14 @@ window.CALC_CONFIG = {
     percentualFinanciavel: 0.80,
 
     // Se true, o financiamento nunca passa do percentual acima.
-    // Nesse caso a entrada + FGTS + subsídio precisam cobrir o restante.
+    // O restante aparece como entrada estimada (entrada + FGTS + subsídio
+    // e, se faltar, o valor a complementar).
     aplicarLimitePercentualFinanciavel: true,
+
+    // Valor do imóvel mais barato que vocês oferecem (R$).
+    // A estimativa nunca mostra imóvel abaixo disso. Se a renda não chegar
+    // a esse valor, o resultado mostra quanto falta para alcançá-lo.
+    valorMinimoImovel: 240000,
 
     // Custo mensal estimado de seguros e taxas somado à parcela (em R$).
     // Deixe 0 para ignorar.

@@ -695,6 +695,7 @@ input { font: inherit; }
 .c-ent { background: var(--azul-500); }
 .c-fgts { background: var(--roxo-500); }
 .c-sub { background: var(--laranja-500); }
+.c-falta { background: repeating-linear-gradient(45deg, #CBD5E1 0 4px, #E2E8F0 4px 8px); }
 
 /* Mensagem personalizada */
 .mensagem { display: flex; gap: 14px; align-items: flex-start; }
