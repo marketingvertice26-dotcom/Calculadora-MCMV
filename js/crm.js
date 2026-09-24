@@ -16,7 +16,31 @@ window.CRM = (function () {
       'primeiro-imovel': 'Comprar primeiro imóvel',
       'entender-financiamento': 'Entender se consegue financiar',
       'pesquisando': 'Ainda pesquisando'
-    }
+    },
+    jaFinanciou: {
+      'nunca': 'Nunca tentou',
+      'nao-consegui': 'Tentou, mas não conseguiu',
+      'tem-simulacao': 'Já tem simulação no banco'
+    },
+    momento: {
+      'comecando': 'Começou a pesquisar agora',
+      'viu-internet': 'Já viu imóveis na internet',
+      'visitou': 'Já visitou imóveis',
+      'imovel-em-vista': 'Já tem um imóvel em vista'
+    },
+    prazo: {
+      'ate-3-meses': 'Nos próximos 3 meses',
+      '3-6-meses': 'De 3 a 6 meses',
+      '6-12-meses': 'De 6 meses a 1 ano',
+      'mais-1-ano': 'Mais de 1 ano',
+      'nao-sei': 'Ainda não sabe'
+    },
+    pronto: {
+      'quer-avancar': 'Sim, quer avançar',
+      'conversar-familia': 'Precisa conversar com a família',
+      'so-entender': 'Por enquanto só quer entender'
+    },
+    temperatura: { quente: 'QUENTE', morno: 'MORNO', frio: 'FRIO' }
   };
 
   function brl(v) {
@@ -87,6 +111,19 @@ window.CRM = (function () {
         objetivoTexto: ROTULOS.objetivo[r.objetivo] || null
       },
 
+      qualificacao: {
+        jaTentouFinanciar: r.jaFinanciou || null,
+        jaTentouFinanciarTexto: ROTULOS.jaFinanciou[r.jaFinanciou] || null,
+        momentoDeCompra: r.momento || null,
+        momentoDeCompraTexto: ROTULOS.momento[r.momento] || null,
+        prazoDecisao: r.prazo || null,
+        prazoDecisaoTexto: ROTULOS.prazo[r.prazo] || null,
+        prontoParaSeguir: r.pronto || null,
+        prontoParaSeguirTexto: ROTULOS.pronto[r.pronto] || null,
+        temperatura: estado.temperatura ? estado.temperatura.nivel : null,
+        pontuacao: estado.temperatura ? estado.temperatura.pontos : null
+      },
+
       dadosCalculados: {
         projecaoAluguel5Anos: porAnos[5] != null ? porAnos[5] : null,
         projecaoAluguel10Anos: porAnos[10] != null ? porAnos[10] : null,
@@ -122,13 +159,18 @@ window.CRM = (function () {
 
   /* ---------- Resumo em texto para o corretor ---------- */
 
-  function resumoCorretor(estado) {
+  // interno = true inclui temperatura e notas que o cliente não deve ver
+  function resumoCorretor(estado, interno) {
+    if (interno === undefined) interno = true;
     const r = estado.respostas;
     const est = estado.estimativa || {};
     const tempo = estado.tempoCalculado || {};
     const linhas = [];
 
     linhas.push('Lead simulou possibilidade de sair do aluguel.');
+    if (interno && estado.temperatura) {
+      linhas.push('Temperatura: ' + ROTULOS.temperatura[estado.temperatura.nivel] + ' (' + estado.temperatura.pontos + ' pontos)');
+    }
     if (estado.lead.nome) linhas.push('Nome: ' + estado.lead.nome);
     linhas.push('Renda familiar: ' + (brl(estado.lead.renda) || 'Não informada'));
     linhas.push('Aluguel atual: ' + (brl(r.aluguel) || 'Não informado'));
@@ -145,6 +187,11 @@ window.CRM = (function () {
     linhas.push('Pessoas na família: ' + (r.pessoas === 5 ? '5 ou mais' : (r.pessoas || 'Não informado')));
     linhas.push('Possui imóvel: ' + (r.possuiImovel == null ? 'Não informado' : (r.possuiImovel ? 'Sim' : 'Não')));
     linhas.push('Objetivo: ' + (ROTULOS.objetivo[r.objetivo] || 'Não informado'));
+    linhas.push('Prazo para decidir: ' + (ROTULOS.prazo[r.prazo] || 'Não informado'));
+    linhas.push('Pronto para seguir: ' + (ROTULOS.pronto[r.pronto] || 'Não informado'));
+    linhas.push('Momento: ' + (ROTULOS.momento[r.momento] || 'Não informado'));
+    linhas.push('Já tentou financiar: ' + (ROTULOS.jaFinanciou[r.jaFinanciou] || 'Não informado') +
+      (interno && r.jaFinanciou === 'nao-consegui' ? ' (vale perguntar o motivo)' : ''));
 
     if (est.faixaFinanciamento) {
       linhas.push('Estimativa de financiamento: ' + textoFaixa(est.faixaFinanciamento));
@@ -192,7 +239,7 @@ window.CRM = (function () {
     const nome = estado.lead.nome ? estado.lead.nome.split(' ')[0] : '';
     const texto = 'Olá! ' + (nome ? 'Sou ' + nome + '. ' : '') +
       'Fiz a simulação de aluguel x financiamento e quero entender quais imóveis fazem sentido para mim.\n\n' +
-      resumoCorretor(estado);
+      resumoCorretor(estado, false);
     return 'https://wa.me/' + String(cfg.ctaFinal.whatsappNumero).replace(/\D/g, '') +
       '?text=' + encodeURIComponent(texto);
   }

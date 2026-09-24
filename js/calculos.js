@@ -229,7 +229,23 @@ window.Calculos = (function () {
     return { titulo: titulo, texto: texto, tom: tom, indicadorInterno: indicadorInterno, pendencias: pendencias };
   }
 
+  /* ---------- Temperatura do lead (só para o CRM) ---------- */
+
+  function temperaturaLead(respostas, estimativa, cfg) {
+    const q = cfg.qualificacao;
+    let pontos = 0;
+    ['prazo', 'pronto', 'momento', 'jaFinanciou'].forEach(function (campo) {
+      const tabela = q.pontos[campo] || {};
+      pontos += tabela[respostas[campo]] || 0;
+    });
+    if (estimativa && estimativa.status === 'estimado') pontos += q.pontos.estimativaEncontrada || 0;
+
+    const nivel = pontos >= q.quente ? 'quente' : (pontos >= q.morno ? 'morno' : 'frio');
+    return { nivel: nivel, pontos: pontos };
+  }
+
   return {
+    temperaturaLead: temperaturaLead,
     mesesDeAluguel: mesesDeAluguel,
     totalAluguel: totalAluguel,
     projecaoAluguel: projecaoAluguel,

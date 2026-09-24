@@ -21,7 +21,8 @@
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0,
       entradaResposta: null, entradaValor: 0,
       fgtsResposta: null, fgtsValor: 0,
-      pessoas: null, possuiImovel: null, objetivo: null
+      pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
     },
     tempoCalculado: null,
     totalPago: 0,
@@ -112,7 +113,8 @@
   function montarFluxo() {
     const fluxo = ['intro'];
     if (!estado.lead.renda) fluxo.push('renda');
-    fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'objetivo', 'calculando', 'resultado');
+    fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'jaFinanciou',
+      'objetivo', 'momento', 'prazo', 'pronto', 'calculando', 'resultado');
     estado.fluxo = fluxo;
   }
 
@@ -364,6 +366,7 @@
       possuiImovel: r.possuiImovel
     }, cfg);
     estado.diagnostico = C.diagnostico(estado.estimativa, r, cfg);
+    estado.temperatura = C.temperaturaLead(r, estado.estimativa, cfg);
 
     const itens = $$('#checklist li');
     itens.forEach(function (li) { li.classList.remove('feito'); });
@@ -559,7 +562,8 @@
   function refazer() {
     Object.assign(estado.respostas, {
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0, entradaResposta: null, entradaValor: 0,
-      fgtsResposta: null, fgtsValor: 0, pessoas: null, possuiImovel: null, objetivo: null
+      fgtsResposta: null, fgtsValor: 0, pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
     });
     // Se a renda foi perguntada aqui, pergunta de novo
     if (estado.lead.rendaPerguntadaAqui) { estado.lead.renda = 0; estado.lead.rendaPerguntadaAqui = false; }
@@ -654,7 +658,7 @@
     }
     if (chave === 'pessoas') r.pessoas = parseInt(valor, 10);
     if (chave === 'possuiImovel') r.possuiImovel = valor === 'sim';
-    if (chave === 'objetivo') r.objetivo = valor;
+    if (['objetivo', 'jaFinanciou', 'momento', 'prazo', 'pronto'].indexOf(chave) >= 0) r[chave] = valor;
   }
 
   /* ---------- Início ---------- */

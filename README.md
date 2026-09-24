@@ -23,9 +23,10 @@ Feita em HTML, CSS e JavaScript puros. Não precisa de instalação nem de build
 4. Etapa 2: tempo pagando aluguel (opções rápidas + campo de anos e meses exatos)
 5. Revelação: quanto já foi para o aluguel
 6. Projeção: 5, 10 e 20 anos + "Agora imagine se parte desse dinheiro..."
-7. Etapas 3 a 7: entrada, FGTS, família, imóvel no nome, objetivo
-8. Tela de cálculo
-9. Resultado: até hoje x próximo passo, os dois cenários, mensagem personalizada, projeção de longo prazo, fatores que influenciam e CTA
+7. Perguntas de financiamento: entrada, FGTS, família, imóvel no nome
+8. Perguntas de qualificação: já tentou financiar, objetivo, momento de compra, prazo para decidir e se está pronto para seguir
+9. Tela de cálculo
+10. Resultado: até hoje x próximo passo, os dois cenários, mensagem personalizada, projeção de longo prazo, fatores que influenciam e CTA
 
 ## 1. Como a LP passa os dados
 
@@ -89,6 +90,7 @@ O campo `resumoCorretor` é um texto pronto para colar na nota do lead:
 
 ```
 Lead simulou possibilidade de sair do aluguel.
+Temperatura: QUENTE (10 pontos)
 Nome: Ana Souza
 Renda familiar: R$ 4.500
 Aluguel atual: R$ 1.200
@@ -99,11 +101,31 @@ FGTS: Sim (aprox. R$ 8.000)
 Pessoas na família: 3
 Possui imóvel: Não
 Objetivo: Comprar primeiro imóvel
+Prazo para decidir: Nos próximos 3 meses
+Pronto para seguir: Sim, quer avançar
+Momento: Já visitou imóveis
+Já tentou financiar: Nunca tentou
 Estimativa de financiamento: R$ 76.000 a R$ 94.000
 Estimativa de imóvel: R$ 95.000 a R$ 117.000
 ```
 
 O `indicadorInterno` ajuda o corretor a priorizar (ex.: `estimado`, `precisa-entrada`, `renda-acima-faixas`, `analisar-imovel-existente`). Ele **não aparece** para o usuário.
+
+## Temperatura do lead
+
+Com as respostas de qualificação, a calculadora dá uma nota ao lead: **quente**, **morno** ou **frio**. Ela vai só para o CRM e para o resumo do corretor. O cliente nunca vê, e o texto que ele manda no WhatsApp também não mostra essa nota.
+
+| Resposta | Pontos |
+|---|---|
+| Prazo: 3 meses / 3 a 6 / 6 a 12 / mais de 1 ano ou não sabe | 3 / 2 / 1 / 0 |
+| Pronto para seguir: quer avançar / conversar com a família / só entender | 3 / 1 / 0 |
+| Momento: imóvel em vista / já visitou / viu na internet / começando | 3 / 2 / 1 / 0 |
+| Já tentou financiar: tem simulação / nunca / não conseguiu | 2 / 1 / 1 |
+| A simulação encontrou uma faixa de financiamento | +1 |
+
+Com 9 pontos ou mais o lead é quente. De 5 a 8 é morno. Abaixo de 5 é frio. Os pesos e os limites ficam em `config.js`, em `qualificacao`.
+
+No JSON, esses dados chegam no bloco `qualificacao` (`prazoDecisao`, `prontoParaSeguir`, `momentoDeCompra`, `jaTentouFinanciar`, `temperatura`, `pontuacao`).
 
 ## 3. Botão final
 

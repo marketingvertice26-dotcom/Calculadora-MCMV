@@ -92,6 +92,24 @@ window.CALC_CONFIG = {
   },
 
   /* ------------------------------------------------------------------
+     2.1 QUALIFICAÇÃO DO LEAD (só vai para o CRM, o cliente nunca vê)
+     Cada resposta soma pontos. A soma define a temperatura do lead.
+     ------------------------------------------------------------------ */
+  qualificacao: {
+    pontos: {
+      prazo: { 'ate-3-meses': 3, '3-6-meses': 2, '6-12-meses': 1, 'mais-1-ano': 0, 'nao-sei': 0 },
+      pronto: { 'quer-avancar': 3, 'conversar-familia': 1, 'so-entender': 0 },
+      momento: { 'imovel-em-vista': 3, 'visitou': 2, 'viu-internet': 1, 'comecando': 0 },
+      jaFinanciou: { 'tem-simulacao': 2, 'nunca': 1, 'nao-consegui': 1 },
+      // Ponto extra quando a simulação encontrou uma faixa de financiamento
+      estimativaEncontrada: 1
+    },
+    // Pontuação mínima para cada temperatura (máximo possível: 12)
+    quente: 9,
+    morno: 5
+  },
+
+  /* ------------------------------------------------------------------
      3. DADOS VINDOS DA LANDING PAGE
      A calculadora procura os dados nesta ordem:
        a) parâmetros da URL (ex.: ?nome=Ana&whatsapp=11999999999&renda=4500)
