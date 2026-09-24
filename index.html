@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0B3B2E">
+  <title>Aluguel x Financiamento | Diagnóstico MCMV</title>
+  <meta name="description" content="Descubra quanto você já destinou ao aluguel e veja uma estimativa do seu cenário de financiamento pelo Minha Casa, Minha Vida.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="app" id="app">
+
+    <!-- Topo -->
+    <header class="topo">
+      <button class="btn-voltar" id="btnVoltar" type="button" aria-label="Voltar" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="marca" id="marca"></div>
+      <div class="progresso" id="progresso" hidden>
+        <span class="progresso-texto" id="progressoTexto">Etapa 1 de 7</span>
+        <div class="progresso-barra"><div class="progresso-preenchido" id="progressoBarra"></div></div>
+      </div>
+    </header>
+
+    <main class="palco" id="palco">
+
+      <!-- INTRO -->
+      <section class="tela ativa" data-tela="intro">
+        <div class="intro-icone" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64"><path d="M10 30L32 12l22 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 26v26h32V26" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M27 52V38h10v14" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 class="titulo-grande" id="saudacao">Olá! Vamos entender o seu cenário.</h1>
+        <p class="subtitulo">Em menos de 2 minutos você vai ver quanto o aluguel já representou na sua vida e uma estimativa do seu cenário de financiamento.</p>
+        <ul class="intro-lista">
+          <li><span>1</span>Seu cenário atual</li>
+          <li><span>2</span>Quanto o aluguel já custou</li>
+          <li><span>3</span>Sua estimativa de financiamento</li>
+        </ul>
+        <button class="btn-principal" type="button" data-acao="comecar">Começar meu diagnóstico</button>
+        <p class="rodape-mini">Simulação gratuita. Seus dados ficam protegidos.</p>
+      </section>
+
+      <!-- RENDA (só aparece se não veio da LP) -->
+      <section class="tela" data-tela="renda" data-etapa>
+        <p class="kicker">Antes de começar</p>
+        <h2 class="pergunta">Qual é a renda mensal da sua família?</h2>
+        <p class="apoio">Some a renda de todos que vão participar da compra.</p>
+        <label class="campo-moeda">
+          <span class="prefixo">R$</span>
+          <input type="text" inputmode="numeric" autocomplete="off" placeholder="4.500" id="inRenda" data-moeda>
+        </label>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="renda">Continuar</button>
+      </section>
+
+      <!-- 1. ALUGUEL -->
+      <section class="tela" data-tela="aluguel" data-etapa>
+        <p class="kicker">Vamos começar pelo seu cenário atual</p>
+        <h2 class="pergunta">Quanto você paga de aluguel hoje?</h2>
+        <label class="campo-moeda">
+          <span class="prefixo">R$</span>
+          <input type="text" inputmode="numeric" autocomplete="off" placeholder="1.200" id="inAluguel" data-moeda>
+        </label>
+        <p class="dica-viva" id="dicaAluguel" aria-live="polite"></p>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="aluguel">Continuar</button>
+      </section>
+
+      <!-- 2. TEMPO -->
+      <section class="tela" data-tela="tempo" data-etapa>
+        <p class="kicker">Agora, o tempo</p>
+        <h2 class="pergunta">Há quanto tempo você paga aluguel?</h2>
+        <div class="opcoes opcoes-grade" data-grupo="tempoFaixa">
+          <button type="button" class="opcao" data-valor="menos-1">Menos de 1 ano</button>
+          <button type="button" class="opcao" data-valor="1-2">1 a 2 anos</button>
+          <button type="button" class="opcao" data-valor="3-5">3 a 5 anos</button>
+          <button type="button" class="opcao" data-valor="6-10">6 a 10 anos</button>
+          <button type="button" class="opcao opcao-larga" data-valor="mais-10">Mais de 10 anos</button>
+        </div>
+        <div class="tempo-exato">
+          <p class="tempo-exato-titulo">Sabe o tempo certinho? <span>(opcional, deixa a conta mais precisa)</span></p>
+          <div class="tempo-campos">
+            <label class="campo-numero">
+              <input type="number" inputmode="numeric" min="0" max="60" placeholder="0" id="inAnos">
+              <span>anos</span>
+            </label>
+            <label class="campo-numero">
+              <input type="number" inputmode="numeric" min="0" max="11" placeholder="0" id="inMeses">
+              <span>meses</span>
+            </label>
+          </div>
+        </div>
+        <p class="dica-viva" id="dicaTempo" aria-live="polite"></p>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="tempo">Ver quanto isso representa</button>
+      </section>
+
+      <!-- REVELAÇÃO: PASSADO -->
+      <section class="tela tela-revelacao" data-tela="passado">
+        <p class="kicker kicker-claro">Até hoje</p>
+        <h2 class="titulo-revelacao">Você já destinou aproximadamente</h2>
+        <div class="numero-gigante" id="numPassado">R$ 0</div>
+        <p class="revelacao-detalhe" id="detalhePassado"></p>
+        <div class="grafico-meses" id="graficoMeses" aria-hidden="true"></div>
+        <p class="nota-estimativa">Estimativa. A conta usa o valor de aluguel informado hoje e não considera reajustes ao longo dos anos.</p>
+        <button class="btn-principal btn-claro" type="button" data-acao="ir" data-destino="futuro">E se eu continuar no aluguel?</button>
+      </section>
+
+      <!-- REVELAÇÃO: FUTURO -->
+      <section class="tela" data-tela="futuro">
+        <p class="kicker">Olhando para frente</p>
+        <h2 class="pergunta">E se você continuar pagando aluguel?</h2>
+        <div class="abas-horizonte" id="abasHorizonte" role="tablist"></div>
+        <div class="futuro-destaque">
+          <span class="futuro-rotulo" id="futuroRotulo">Em 10 anos</span>
+          <div class="numero-grande" id="numFuturo">R$ 0</div>
+          <span class="futuro-sub">poderão ir para o aluguel</span>
+        </div>
+        <div class="barras-futuro" id="barrasFuturo"></div>
+        <p class="nota-estimativa">Projeção simples com o aluguel de hoje. Não considera reajustes futuros.</p>
+        <div class="reflexao">
+          <p>Agora imagine se parte desse dinheiro fosse direcionada para um imóvel próprio.</p>
+        </div>
+        <button class="btn-principal" type="button" data-acao="ir" data-destino="entrada">Ver meu cenário de financiamento</button>
+      </section>
+
+      <!-- 3. ENTRADA -->
+      <section class="tela" data-tela="entrada" data-etapa>
+        <p class="kicker">Seu cenário de financiamento</p>
+        <h2 class="pergunta">Você já tem algum valor para dar de entrada?</h2>
+        <div class="opcoes" data-grupo="entradaResposta">
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+          <button type="button" class="opcao" data-valor="nao">Não</button>
+          <button type="button" class="opcao" data-valor="nao-sei">Ainda não sei</button>
+        </div>
+        <div class="revela" id="revelaEntrada" hidden>
+          <p class="revela-titulo">Quanto você tem disponível para entrada?</p>
+          <label class="campo-moeda">
+            <span class="prefixo">R$</span>
+            <input type="text" inputmode="numeric" autocomplete="off" placeholder="10.000" id="inEntrada" data-moeda>
+          </label>
+        </div>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="entrada">Continuar</button>
+      </section>
+
+      <!-- 4. FGTS -->
+      <section class="tela" data-tela="fgts" data-etapa>
+        <p class="kicker">O FGTS pode ajudar</p>
+        <h2 class="pergunta">Você tem FGTS?</h2>
+        <div class="opcoes" data-grupo="fgtsResposta">
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+          <button type="button" class="opcao" data-valor="nao">Não</button>
+          <button type="button" class="opcao" data-valor="nao-sei">Não sei</button>
+        </div>
+        <div class="revela" id="revelaFgts" hidden>
+          <p class="revela-titulo">Sabe mais ou menos quanto tem? <span>(opcional)</span></p>
+          <label class="campo-moeda">
+            <span class="prefixo">R$</span>
+            <input type="text" inputmode="numeric" autocomplete="off" placeholder="Pode deixar em branco" id="inFgts" data-moeda>
+          </label>
+        </div>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="fgts">Continuar</button>
+      </section>
+
+      <!-- 5. FAMÍLIA -->
+      <section class="tela" data-tela="familia" data-etapa>
+        <p class="kicker">Sobre sua família</p>
+        <h2 class="pergunta">Quantas pessoas fazem parte da sua família?</h2>
+        <div class="opcoes opcoes-numeros" data-grupo="pessoas" data-avanca>
+          <button type="button" class="opcao" data-valor="1">1</button>
+          <button type="button" class="opcao" data-valor="2">2</button>
+          <button type="button" class="opcao" data-valor="3">3</button>
+          <button type="button" class="opcao" data-valor="4">4</button>
+          <button type="button" class="opcao" data-valor="5">5+</button>
+        </div>
+      </section>
+
+      <!-- 6. IMÓVEL -->
+      <section class="tela" data-tela="imovel" data-etapa>
+        <p class="kicker">Quase lá</p>
+        <h2 class="pergunta">Você já tem algum imóvel no seu nome?</h2>
+        <div class="opcoes" data-grupo="possuiImovel" data-avanca>
+          <button type="button" class="opcao" data-valor="nao">Não</button>
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+        </div>
+      </section>
+
+      <!-- 7. OBJETIVO -->
+      <section class="tela" data-tela="objetivo" data-etapa>
+        <p class="kicker">Última pergunta</p>
+        <h2 class="pergunta">O que você busca hoje?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="objetivo" data-avanca>
+          <button type="button" class="opcao" data-valor="sair-aluguel">Quero sair do aluguel</button>
+          <button type="button" class="opcao" data-valor="primeiro-imovel">Quero comprar meu primeiro imóvel</button>
+          <button type="button" class="opcao" data-valor="entender-financiamento">Quero entender se consigo financiar</button>
+          <button type="button" class="opcao" data-valor="pesquisando">Ainda estou pesquisando</button>
+        </div>
+      </section>
+
+      <!-- CALCULANDO -->
+      <section class="tela tela-calculando" data-tela="calculando">
+        <div class="loader" aria-hidden="true"><span></span></div>
+        <h2 class="pergunta">Montando seu diagnóstico</h2>
+        <ul class="checklist" id="checklist">
+          <li>Somando o histórico de aluguel</li>
+          <li>Projetando os próximos anos</li>
+          <li>Considerando renda, entrada e FGTS</li>
+          <li>Estimando sua faixa de financiamento</li>
+        </ul>
+      </section>
+
+      <!-- RESULTADO -->
+      <section class="tela tela-resultado" data-tela="resultado">
+
+        <div class="res-cabecalho">
+          <span class="selo-estimativa">Estimativa</span>
+          <h1 class="titulo-grande" id="resTitulo">Seu diagnóstico</h1>
+          <p class="subtitulo">Estimativa baseada nas informações fornecidas.</p>
+        </div>
+
+        <!-- Até hoje → Próximo passo -->
+        <div class="linha-tempo">
+          <div class="lt-bloco lt-passado">
+            <span class="lt-rotulo">Até hoje</span>
+            <p>Você já destinou aproximadamente</p>
+            <strong id="resPassado">R$ 0</strong>
+            <p>ao aluguel.</p>
+          </div>
+          <div class="lt-seta" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 4v16m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="lt-bloco lt-proximo">
+            <span class="lt-rotulo">Próximo passo</span>
+            <p id="resProximoTexto">Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.</p>
+          </div>
+        </div>
+
+        <!-- Dois cenários -->
+        <div class="cenarios">
+          <article class="card cenario cenario-atual">
+            <header>
+              <span class="cenario-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 11l8-6 8 6v9H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-5h6v5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              </span>
+              <h3>Seu cenário atual</h3>
+            </header>
+            <dl class="dados" id="dadosAtual"></dl>
+          </article>
+
+          <article class="card cenario cenario-financiamento">
+            <header>
+              <span class="cenario-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 21h18M5 21V10l7-5 7 5v11" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 14h4v7h-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              </span>
+              <h3>Possibilidade de financiamento</h3>
+              <span class="tag-estimativa">Estimativa</span>
+            </header>
+            <dl class="dados" id="dadosFinanciamento"></dl>
+            <div class="composicao" id="composicao"></div>
+            <p class="nota-card">A aprovação e as condições finais dependem da análise de crédito e das regras aplicáveis ao financiamento.</p>
+          </article>
+        </div>
+
+        <!-- Mensagem personalizada -->
+        <div class="card mensagem" id="mensagem">
+          <span class="mensagem-icone" aria-hidden="true"></span>
+          <div>
+            <h3 id="mensagemTitulo"></h3>
+            <p id="mensagemTexto"></p>
+          </div>
+        </div>
+
+        <!-- Longo prazo -->
+        <div class="card">
+          <h3 class="card-titulo">Quanto o aluguel pode representar ao longo do tempo?</h3>
+          <div class="barras-longo" id="barrasLongo"></div>
+          <p class="nota-estimativa">Esses valores são uma projeção simples baseada no aluguel informado hoje e não consideram reajustes.</p>
+        </div>
+
+        <!-- O que influencia -->
+        <div class="card">
+          <h3 class="card-titulo">O que influencia o seu financiamento</h3>
+          <ul class="fatores" id="fatores"></ul>
+        </div>
+
+        <!-- CTA final -->
+        <div class="cta-final">
+          <h2>Quer entender quais imóveis podem fazer sentido para o seu cenário?</h2>
+          <p>Agora que você já conhece uma estimativa do seu cenário, um especialista pode analisar suas informações e apresentar opções compatíveis com o seu perfil.</p>
+          <button class="btn-principal btn-cta" type="button" data-acao="cta">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.5-.3z"/></svg>
+            Quero falar com um especialista
+          </button>
+          <p class="cta-feedback" id="ctaFeedback" aria-live="polite"></p>
+        </div>
+
+        <p class="aviso-legal">
+          Esta ferramenta mostra uma estimativa baseada nas informações fornecidas e em parâmetros de referência. Ela não representa proposta, pré-aprovação ou garantia de crédito. A aprovação e as condições finais dependem da análise de crédito e das regras aplicáveis ao financiamento.
+        </p>
+
+        <button class="btn-texto" type="button" data-acao="refazer">Refazer simulação</button>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/calculos.js"></script>
+  <script src="js/crm.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

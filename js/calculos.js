@@ -1,0 +1,243 @@
+/* ==========================================================================
+   CÁLCULOS
+   Funções puras: recebem dados + configuração e devolvem números.
+   Nenhuma regra fixa mora aqui. Tudo vem de CALC_CONFIG (js/config.js).
+   ========================================================================== */
+
+window.Calculos = (function () {
+
+  /* ---------- Aluguel ---------- */
+
+  // Meses totais pagando aluguel.
+  // Se a pessoa informou anos/meses exatos, usa isso. Senão usa a faixa escolhida.
+  function mesesDeAluguel(tempo, cfg) {
+    const anos = Number(tempo.anos) || 0;
+    const meses = Number(tempo.meses) || 0;
+    const exato = anos * 12 + meses;
+    if (exato > 0) return { meses: exato, origem: 'informado' };
+    if (tempo.faixa && cfg.aluguel.mesesPorFaixaTempo[tempo.faixa]) {
+      return { meses: cfg.aluguel.mesesPorFaixaTempo[tempo.faixa], origem: 'faixa' };
+    }
+    return { meses: 0, origem: 'nao-informado' };
+  }
+
+  // Aluguel mensal × meses (sem reajustes)
+  function totalAluguel(aluguelMensal, meses) {
+    return (Number(aluguelMensal) || 0) * (Number(meses) || 0);
+  }
+
+  function projecaoAluguel(aluguelMensal, cfg) {
+    return cfg.aluguel.horizontesAnos.map(function (anos) {
+      return { anos: anos, valor: totalAluguel(aluguelMensal, anos * 12) };
+    });
+  }
+
+  /* ---------- Matemática financeira ---------- */
+
+  function taxaMensal(taxaAnual) {
+    return Math.pow(1 + taxaAnual, 1 / 12) - 1;
+  }
+
+  // Quanto dá para financiar com uma parcela máxima
+  function valorFinanciavelPelaParcela(parcela, i, n, sistema) {
+    if (parcela <= 0 || n <= 0) return 0;
+    if (i === 0) return parcela * n;
+    if (sistema === 'SAC') {
+      // 1ª parcela SAC = F/n + F*i  →  F = P / (1/n + i)
+      return parcela / (1 / n + i);
+    }
+    // PRICE: valor presente de uma série de parcelas iguais
+    return parcela * (1 - Math.pow(1 + i, -n)) / i;
+  }
+
+  // Parcela (a primeira, no caso SAC) para um valor financiado
+  function parcelaDoFinanciamento(valor, i, n, sistema) {
+    if (valor <= 0 || n <= 0) return 0;
+    if (i === 0) return valor / n;
+    if (sistema === 'SAC') return valor / n + valor * i;
+    return valor * i / (1 - Math.pow(1 + i, -n));
+  }
+
+  /* ---------- Faixa de renda e subsídio ---------- */
+
+  function encontrarFaixa(renda, faixas) {
+    for (let k = 0; k < faixas.length; k++) {
+      if (renda <= faixas[k].rendaMax) {
+        return { faixa: faixas[k], rendaMin: k === 0 ? 0 : faixas[k - 1].rendaMax, indice: k };
+      }
+    }
+    return null;
+  }
+
+  function estimarSubsidio(renda, achado, pessoas, possuiImovel, fin) {
+    if (!achado || fin.modoSubsidio === 'nenhum') return 0;
+    if (possuiImovel && fin.exigeNaoPossuirImovel) return 0;
+    const max = achado.faixa.subsidioMax || 0;
+    if (max <= 0) return 0;
+
+    let valor = max;
+    if (fin.modoSubsidio === 'proporcional') {
+      const largura = achado.faixa.rendaMax - achado.rendaMin;
+      const posicao = largura > 0 ? (achado.faixa.rendaMax - renda) / largura : 1;
+      valor = max * Math.min(1, Math.max(0, posicao));
+    }
+    const ajuste = fin.ajusteSubsidioPorPessoas[Math.min(5, pessoas || 1)];
+    return valor * (ajuste == null ? 1 : ajuste);
+  }
+
+  /* ---------- Faixa de exibição ---------- */
+
+  function faixaDeValor(valor, fin, teto) {
+    if (!valor || valor <= 0) return null;
+    const r = fin.arredondarPara || 1;
+    let min = Math.floor((valor * (1 - fin.margemFaixa)) / r) * r;
+    let max = Math.ceil((valor * (1 + fin.margemFaixa)) / r) * r;
+    if (teto) max = Math.min(max, teto);
+    if (min > max) min = max;
+    return { min: min, max: max, central: valor };
+  }
+
+  /* ---------- Estimativa principal ---------- */
+
+  /*
+    dados = {
+      renda, entrada, fgts, pessoas, possuiImovel
+    }
+    Retorna todos os números usados, para exibir e para mandar ao CRM.
+  */
+  function estimarFinanciamento(dados, cfg) {
+    const fin = cfg.financiamento;
+    const renda = Number(dados.renda) || 0;
+    const entrada = Number(dados.entrada) || 0;
+    const fgts = Number(dados.fgts) || 0;
+
+    const base = {
+      renda: renda,
+      entrada: entrada,
+      fgts: fgts,
+      prazoMeses: fin.prazoMeses,
+      sistemaAmortizacao: fin.sistemaAmortizacao,
+      comprometimentoRenda: fin.comprometimentoRenda,
+      percentualFinanciavel: fin.percentualFinanciavel
+    };
+
+    if (renda <= 0) {
+      return Object.assign(base, { status: 'sem-renda' });
+    }
+
+    const achado = encontrarFaixa(renda, fin.faixas);
+    if (!achado) {
+      return Object.assign(base, { status: 'fora-das-faixas' });
+    }
+
+    const faixa = achado.faixa;
+    const i = taxaMensal(faixa.taxaJurosAnual);
+    const n = fin.prazoMeses;
+    const parcelaMax = Math.max(0, renda * fin.comprometimentoRenda - (fin.custosMensaisExtras || 0));
+    const capacidadePelaRenda = valorFinanciavelPelaParcela(parcelaMax, i, n, fin.sistemaAmortizacao);
+
+    const subsidio = estimarSubsidio(renda, achado, dados.pessoas, dados.possuiImovel, fin);
+    const recursos = entrada + fgts + subsidio;
+
+    // Valor do imóvel: o menor entre os limites
+    const limites = {
+      renda: capacidadePelaRenda + recursos,
+      teto: faixa.valorMaxImovel
+    };
+    if (fin.aplicarLimitePercentualFinanciavel && fin.percentualFinanciavel < 1) {
+      limites.entrada = recursos / (1 - fin.percentualFinanciavel);
+    }
+
+    let fatorLimitante = 'renda';
+    let valorImovel = limites.renda;
+    Object.keys(limites).forEach(function (k) {
+      if (limites[k] < valorImovel) { valorImovel = limites[k]; fatorLimitante = k; }
+    });
+
+    const financiamento = Math.max(0, Math.min(capacidadePelaRenda, valorImovel - recursos));
+    const parcelaEstimada = parcelaDoFinanciamento(financiamento, i, n, fin.sistemaAmortizacao)
+      + (financiamento > 0 ? (fin.custosMensaisExtras || 0) : 0);
+
+    return Object.assign(base, {
+      status: financiamento > 0 ? 'estimado' : 'depende-de-recursos',
+      faixaPrograma: faixa.nome,
+      taxaJurosAnual: faixa.taxaJurosAnual,
+      taxaJurosMensal: i,
+      parcelaMaxima: parcelaMax,
+      capacidadePelaRenda: capacidadePelaRenda,
+      subsidioEstimado: subsidio,
+      recursosProprios: entrada + fgts,
+      financiamento: financiamento,
+      valorImovel: financiamento > 0 ? valorImovel : 0,
+      parcelaEstimada: parcelaEstimada,
+      fatorLimitante: fatorLimitante,
+      faixaFinanciamento: faixaDeValor(financiamento, fin),
+      faixaImovel: faixaDeValor(financiamento > 0 ? valorImovel : 0, fin, faixa.valorMaxImovel)
+    });
+  }
+
+  /* ---------- Mensagem personalizada ---------- */
+
+  /*
+    Mensagem orientativa. Nunca diz "aprovado" ou "reprovado".
+    Também devolve um indicador interno (só para o CRM) que ajuda o corretor
+    a priorizar o contato.
+  */
+  function diagnostico(estimativa, respostas, cfg) {
+    const fin = cfg.financiamento;
+    const pendencias = [];
+    if (respostas.entradaResposta === 'nao-sei') pendencias.push('valor de entrada');
+    if (respostas.fgtsResposta === 'nao-sei' || (respostas.fgtsResposta === 'sim' && !respostas.fgtsValor)) pendencias.push('saldo de FGTS');
+
+    let titulo, texto, tom, indicadorInterno;
+
+    if (respostas.possuiImovel && fin.exigeNaoPossuirImovel) {
+      tom = 'atencao';
+      titulo = 'Seu cenário precisa de uma análise mais detalhada';
+      texto = 'Você informou que já tem um imóvel no seu nome. Isso muda as regras que podem valer para você. Um especialista pode verificar quais caminhos fazem sentido no seu caso.';
+      indicadorInterno = 'analisar-imovel-existente';
+    } else if (estimativa.status === 'fora-das-faixas') {
+      tom = 'atencao';
+      titulo = 'Seu cenário pede uma análise personalizada';
+      texto = 'A renda informada ficou acima dos limites considerados nesta simulação. Existem outras linhas de financiamento, e um especialista pode mostrar quais combinam com o seu perfil.';
+      indicadorInterno = 'renda-acima-faixas';
+    } else if (estimativa.status === 'depende-de-recursos') {
+      tom = 'atencao';
+      titulo = 'Seu cenário ainda precisa de uma análise mais detalhada';
+      texto = 'Pela sua renda existe espaço para uma parcela, mas a conta depende de recursos para a entrada, como economias, FGTS ou subsídio. Um especialista pode ajudar a entender quais opções podem fazer sentido.';
+      indicadorInterno = 'precisa-entrada';
+    } else if (estimativa.status === 'estimado') {
+      tom = 'positivo';
+      titulo = 'Seu cenário indica que vale a pena analisar suas possibilidades de financiamento';
+      texto = 'Com base nas informações que você passou, existe uma estimativa de faixa de financiamento para o seu perfil. O próximo passo é conferir isso com uma análise de verdade.';
+      indicadorInterno = estimativa.fatorLimitante === 'entrada' ? 'estimado-limitado-pela-entrada' : 'estimado';
+    } else {
+      tom = 'atencao';
+      titulo = 'Vamos completar o seu diagnóstico';
+      texto = 'Faltaram algumas informações para montar a estimativa. Um especialista pode completar essa análise com você.';
+      indicadorInterno = 'dados-insuficientes';
+    }
+
+    if (indicadorInterno === 'estimado-limitado-pela-entrada') {
+      texto += ' Pela sua renda, a parcela comportaria um valor maior. O que mais pesa na estimativa hoje é o valor disponível para entrada, e um especialista pode mostrar alternativas.';
+    }
+
+    if (pendencias.length && estimativa.status === 'estimado') {
+      texto += ' Como você ainda não sabe o ' + pendencias.join(' e o ') + ', esse número pode mudar depois de conferido.';
+    }
+
+    return { titulo: titulo, texto: texto, tom: tom, indicadorInterno: indicadorInterno, pendencias: pendencias };
+  }
+
+  return {
+    mesesDeAluguel: mesesDeAluguel,
+    totalAluguel: totalAluguel,
+    projecaoAluguel: projecaoAluguel,
+    taxaMensal: taxaMensal,
+    valorFinanciavelPelaParcela: valorFinanciavelPelaParcela,
+    parcelaDoFinanciamento: parcelaDoFinanciamento,
+    encontrarFaixa: encontrarFaixa,
+    estimarFinanciamento: estimarFinanciamento,
+    diagnostico: diagnostico
+  };
+})();
