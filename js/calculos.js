@@ -87,12 +87,13 @@ window.Calculos = (function () {
 
   /* ---------- Faixa de exibição ---------- */
 
-  function faixaDeValor(valor, fin, teto) {
+  function faixaDeValor(valor, fin, teto, piso) {
     if (!valor || valor <= 0) return null;
     const r = fin.arredondarPara || 1;
     let min = Math.floor((valor * (1 - fin.margemFaixa)) / r) * r;
     let max = Math.ceil((valor * (1 + fin.margemFaixa)) / r) * r;
     if (teto) max = Math.min(max, teto);
+    if (piso) min = Math.max(min, piso);
     if (min > max) min = max;
     return { min: min, max: max, central: valor };
   }
@@ -139,27 +140,33 @@ window.Calculos = (function () {
     const subsidio = estimarSubsidio(renda, achado, dados.pessoas, dados.possuiImovel, fin);
     const recursos = entrada + fgts + subsidio;
 
-    // Valor do imóvel: o menor entre os limites
-    const limites = {
-      renda: capacidadePelaRenda + recursos,
-      teto: faixa.valorMaxImovel
-    };
-    if (fin.aplicarLimitePercentualFinanciavel && fin.percentualFinanciavel < 1) {
-      limites.entrada = recursos / (1 - fin.percentualFinanciavel);
-    }
+    // Quanto a renda + recursos permitem comprar, respeitando o teto da faixa
+    const podeComprar = capacidadePelaRenda + recursos;
+    const teto = faixa.valorMaxImovel || Infinity;
+    const valorImovel = Math.min(podeComprar, teto);
+    const fatorLimitante = podeComprar > teto ? 'teto' : 'renda';
 
-    let fatorLimitante = 'renda';
-    let valorImovel = limites.renda;
-    Object.keys(limites).forEach(function (k) {
-      if (limites[k] < valorImovel) { valorImovel = limites[k]; fatorLimitante = k; }
-    });
+    // Imóveis abaixo do valor mínimo não existem no mercado atendido.
+    // Se a estimativa ficar abaixo, a conta é feita para o imóvel mínimo.
+    const minimo = fin.valorMinimoImovel || 0;
+    const status = valorImovel >= minimo ? 'estimado' : 'abaixo-do-minimo';
+    const imovelReferencia = Math.max(valorImovel, minimo);
 
-    const financiamento = Math.max(0, Math.min(capacidadePelaRenda, valorImovel - recursos));
+    // O financiamento não passa da capacidade da renda nem do percentual financiável
+    const limitePercentual = fin.aplicarLimitePercentualFinanciavel
+      ? imovelReferencia * fin.percentualFinanciavel
+      : imovelReferencia;
+    const financiamento = Math.max(0, Math.min(capacidadePelaRenda, limitePercentual, imovelReferencia - recursos));
+
+    // O que o financiamento não cobre precisa vir de entrada, FGTS ou subsídio
+    const entradaNecessaria = imovelReferencia - financiamento;
+    const complementoEntrada = Math.max(0, entradaNecessaria - recursos);
+
     const parcelaEstimada = parcelaDoFinanciamento(financiamento, i, n, fin.sistemaAmortizacao)
       + (financiamento > 0 ? (fin.custosMensaisExtras || 0) : 0);
 
     return Object.assign(base, {
-      status: financiamento > 0 ? 'estimado' : 'depende-de-recursos',
+      status: status,
       faixaPrograma: faixa.nome,
       taxaJurosAnual: faixa.taxaJurosAnual,
       taxaJurosMensal: i,
@@ -167,13 +174,22 @@ window.Calculos = (function () {
       capacidadePelaRenda: capacidadePelaRenda,
       subsidioEstimado: subsidio,
       recursosProprios: entrada + fgts,
+      recursosTotais: recursos,
+      valorMinimoImovel: minimo,
+      imovelReferencia: imovelReferencia,
       financiamento: financiamento,
-      valorImovel: financiamento > 0 ? valorImovel : 0,
+      valorImovel: status === 'estimado' ? valorImovel : 0,
+      entradaNecessaria: entradaNecessaria,
+      complementoEntrada: complementoEntrada,
       parcelaEstimada: parcelaEstimada,
       fatorLimitante: fatorLimitante,
       faixaFinanciamento: faixaDeValor(financiamento, fin),
-      faixaImovel: faixaDeValor(financiamento > 0 ? valorImovel : 0, fin, faixa.valorMaxImovel)
+      faixaImovel: status === 'estimado' ? faixaDeValor(valorImovel, fin, teto, minimo) : null
     });
+  }
+
+  function reais(v) {
+    return 'R$ ' + Math.round(v || 0).toLocaleString('pt-BR');
   }
 
   /* ---------- Mensagem personalizada ---------- */
@@ -201,16 +217,17 @@ window.Calculos = (function () {
       titulo = 'Seu cenário pede uma análise personalizada';
       texto = 'A renda informada ficou acima dos limites considerados nesta simulação. Existem outras linhas de financiamento, e um especialista pode mostrar quais combinam com o seu perfil.';
       indicadorInterno = 'renda-acima-faixas';
-    } else if (estimativa.status === 'depende-de-recursos') {
+    } else if (estimativa.status === 'abaixo-do-minimo') {
       tom = 'atencao';
       titulo = 'Seu cenário ainda precisa de uma análise mais detalhada';
-      texto = 'Pela sua renda existe espaço para uma parcela, mas a conta depende de recursos para a entrada, como economias, FGTS ou subsídio. Um especialista pode ajudar a entender quais opções podem fazer sentido.';
-      indicadorInterno = 'precisa-entrada';
+      texto = 'Com a renda informada, a estimativa ficou abaixo do valor dos imóveis disponíveis, que começam em ' +
+        reais(estimativa.valorMinimoImovel) + '. Juntar a renda com outra pessoa, usar o FGTS ou contar com subsídio pode mudar esse cenário. Um especialista pode mostrar os caminhos possíveis.';
+      indicadorInterno = 'abaixo-do-minimo';
     } else if (estimativa.status === 'estimado') {
       tom = 'positivo';
       titulo = 'Seu cenário indica que vale a pena analisar suas possibilidades de financiamento';
       texto = 'Com base nas informações que você passou, existe uma estimativa de faixa de financiamento para o seu perfil. O próximo passo é conferir isso com uma análise de verdade.';
-      indicadorInterno = estimativa.fatorLimitante === 'entrada' ? 'estimado-limitado-pela-entrada' : 'estimado';
+      indicadorInterno = estimativa.complementoEntrada > 0 ? 'estimado-com-entrada-a-complementar' : 'estimado';
     } else {
       tom = 'atencao';
       titulo = 'Vamos completar o seu diagnóstico';
@@ -218,8 +235,9 @@ window.Calculos = (function () {
       indicadorInterno = 'dados-insuficientes';
     }
 
-    if (indicadorInterno === 'estimado-limitado-pela-entrada') {
-      texto += ' Pela sua renda, a parcela comportaria um valor maior. O que mais pesa na estimativa hoje é o valor disponível para entrada, e um especialista pode mostrar alternativas.';
+    if (indicadorInterno === 'estimado-com-entrada-a-complementar') {
+      texto += ' Para esse valor de imóvel, a entrada estimada fica em torno de ' + reais(estimativa.entradaNecessaria) +
+        '. Em muitos empreendimentos essa diferença pode ser parcelada, e o especialista confirma as condições.';
     }
 
     if (pendencias.length && estimativa.status === 'estimado') {
@@ -229,7 +247,23 @@ window.Calculos = (function () {
     return { titulo: titulo, texto: texto, tom: tom, indicadorInterno: indicadorInterno, pendencias: pendencias };
   }
 
+  /* ---------- Temperatura do lead (só para o CRM) ---------- */
+
+  function temperaturaLead(respostas, estimativa, cfg) {
+    const q = cfg.qualificacao;
+    let pontos = 0;
+    ['prazo', 'pronto', 'momento', 'jaFinanciou'].forEach(function (campo) {
+      const tabela = q.pontos[campo] || {};
+      pontos += tabela[respostas[campo]] || 0;
+    });
+    if (estimativa && estimativa.status === 'estimado') pontos += q.pontos.estimativaEncontrada || 0;
+
+    const nivel = pontos >= q.quente ? 'quente' : (pontos >= q.morno ? 'morno' : 'frio');
+    return { nivel: nivel, pontos: pontos };
+  }
+
   return {
+    temperaturaLead: temperaturaLead,
     mesesDeAluguel: mesesDeAluguel,
     totalAluguel: totalAluguel,
     projecaoAluguel: projecaoAluguel,

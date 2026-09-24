@@ -16,7 +16,31 @@ window.CRM = (function () {
       'primeiro-imovel': 'Comprar primeiro imóvel',
       'entender-financiamento': 'Entender se consegue financiar',
       'pesquisando': 'Ainda pesquisando'
-    }
+    },
+    jaFinanciou: {
+      'nunca': 'Nunca tentou',
+      'nao-consegui': 'Tentou, mas não conseguiu',
+      'tem-simulacao': 'Já tem simulação no banco'
+    },
+    momento: {
+      'comecando': 'Começou a pesquisar agora',
+      'viu-internet': 'Já viu imóveis na internet',
+      'visitou': 'Já visitou imóveis',
+      'imovel-em-vista': 'Já tem um imóvel em vista'
+    },
+    prazo: {
+      'ate-3-meses': 'Nos próximos 3 meses',
+      '3-6-meses': 'De 3 a 6 meses',
+      '6-12-meses': 'De 6 meses a 1 ano',
+      'mais-1-ano': 'Mais de 1 ano',
+      'nao-sei': 'Ainda não sabe'
+    },
+    pronto: {
+      'quer-avancar': 'Sim, quer avançar',
+      'conversar-familia': 'Precisa conversar com a família',
+      'so-entender': 'Por enquanto só quer entender'
+    },
+    temperatura: { quente: 'QUENTE', morno: 'MORNO', frio: 'FRIO' }
   };
 
   function brl(v) {
@@ -87,6 +111,19 @@ window.CRM = (function () {
         objetivoTexto: ROTULOS.objetivo[r.objetivo] || null
       },
 
+      qualificacao: {
+        jaTentouFinanciar: r.jaFinanciou || null,
+        jaTentouFinanciarTexto: ROTULOS.jaFinanciou[r.jaFinanciou] || null,
+        momentoDeCompra: r.momento || null,
+        momentoDeCompraTexto: ROTULOS.momento[r.momento] || null,
+        prazoDecisao: r.prazo || null,
+        prazoDecisaoTexto: ROTULOS.prazo[r.prazo] || null,
+        prontoParaSeguir: r.pronto || null,
+        prontoParaSeguirTexto: ROTULOS.pronto[r.pronto] || null,
+        temperatura: estado.temperatura ? estado.temperatura.nivel : null,
+        pontuacao: estado.temperatura ? estado.temperatura.pontos : null
+      },
+
       dadosCalculados: {
         projecaoAluguel5Anos: porAnos[5] != null ? porAnos[5] : null,
         projecaoAluguel10Anos: porAnos[10] != null ? porAnos[10] : null,
@@ -97,6 +134,10 @@ window.CRM = (function () {
         estimativaFinanciamentoMin: est.faixaFinanciamento ? est.faixaFinanciamento.min : null,
         estimativaFinanciamentoMax: est.faixaFinanciamento ? est.faixaFinanciamento.max : null,
         estimativaImovel: est.valorImovel ? Math.round(est.valorImovel) : null,
+        valorMinimoImovel: est.valorMinimoImovel || null,
+        imovelReferenciaDaConta: est.imovelReferencia ? Math.round(est.imovelReferencia) : null,
+        entradaNecessaria: est.entradaNecessaria != null ? Math.round(est.entradaNecessaria) : null,
+        complementoEntrada: est.complementoEntrada != null ? Math.round(est.complementoEntrada) : null,
         estimativaImovelMin: est.faixaImovel ? est.faixaImovel.min : null,
         estimativaImovelMax: est.faixaImovel ? est.faixaImovel.max : null,
         parcelaEstimada: est.parcelaEstimada ? Math.round(est.parcelaEstimada) : null,
@@ -116,19 +157,84 @@ window.CRM = (function () {
         parcelaMaximaConsiderada: est.parcelaMaxima ? Math.round(est.parcelaMaxima) : null
       },
 
-      resumoCorretor: resumoCorretor(estado)
+      resumoCorretor: resumoCorretor(estado),
+
+      // Os mesmos dados numa lista simples, fácil de mapear no GoHighLevel
+      // (Inbound Webhook) ou em qualquer CRM que não lê JSON aninhado.
+      campos: camposPlanos(estado, evento)
     };
+  }
+
+  function telefoneE164(numero, ddi) {
+    const d = String(numero || '').replace(/\D/g, '');
+    if (!d) return null;
+    if ((d.length === 12 || d.length === 13) && d.indexOf(ddi) === 0) return '+' + d;
+    return '+' + ddi + d;
+  }
+
+  function camposPlanos(estado, evento) {
+    const cfg = window.CALC_CONFIG;
+    const r = estado.respostas;
+    const est = estado.estimativa || {};
+    const tempo = estado.tempoCalculado || {};
+    const proj = {};
+    (estado.projecao || []).forEach(function (p) { proj[p.anos] = Math.round(p.valor); });
+    const nome = estado.lead.nome || '';
+    const arred = function (v) { return v ? Math.round(v) : ''; };
+
+    const c = {
+      evento: evento,
+      nome: nome,
+      primeiro_nome: nome.split(' ')[0] || '',
+      sobrenome: nome.split(' ').slice(1).join(' '),
+      telefone: telefoneE164(estado.lead.whatsapp, cfg.crm.ddiPadrao || '55') || '',
+      renda_familiar: estado.lead.renda || '',
+      aluguel_mensal: r.aluguel || '',
+      tempo_aluguel: textoTempo(tempo.meses) + (tempo.origem === 'faixa' ? ' (aprox.)' : ''),
+      tempo_aluguel_meses: tempo.meses || '',
+      total_pago_aluguel: arred(estado.totalPago),
+      tem_entrada: ROTULOS.simNao[r.entradaResposta] || '',
+      valor_entrada: r.entradaResposta === 'sim' ? r.entradaValor : '',
+      tem_fgts: ROTULOS.simNao[r.fgtsResposta] || '',
+      valor_fgts: r.fgtsResposta === 'sim' ? (r.fgtsValor || '') : '',
+      pessoas_familia: r.pessoas === 5 ? '5 ou mais' : (r.pessoas || ''),
+      possui_imovel: r.possuiImovel == null ? '' : (r.possuiImovel ? 'Sim' : 'Não'),
+      objetivo: ROTULOS.objetivo[r.objetivo] || '',
+      ja_tentou_financiar: ROTULOS.jaFinanciou[r.jaFinanciou] || '',
+      momento_compra: ROTULOS.momento[r.momento] || '',
+      prazo_decisao: ROTULOS.prazo[r.prazo] || '',
+      pronto_para_seguir: ROTULOS.pronto[r.pronto] || '',
+      temperatura: estado.temperatura ? ROTULOS.temperatura[estado.temperatura.nivel] : '',
+      pontuacao: estado.temperatura ? estado.temperatura.pontos : '',
+      projecao_5_anos: proj[5] || '',
+      projecao_10_anos: proj[10] || '',
+      projecao_20_anos: proj[20] || '',
+      status_estimativa: est.status || '',
+      faixa_imovel: est.status === 'estimado' ? textoFaixa(est.faixaImovel) : '',
+      faixa_financiamento: est.faixaFinanciamento ? textoFaixa(est.faixaFinanciamento) : '',
+      parcela_estimada: arred(est.parcelaEstimada),
+      entrada_estimada: arred(est.entradaNecessaria),
+      complemento_entrada: arred(est.complementoEntrada),
+      resumo_corretor: resumoCorretor(estado)
+    };
+    Object.keys(estado.rastreio || {}).forEach(function (k) { c[k] = estado.rastreio[k]; });
+    return c;
   }
 
   /* ---------- Resumo em texto para o corretor ---------- */
 
-  function resumoCorretor(estado) {
+  // interno = true inclui temperatura e notas que o cliente não deve ver
+  function resumoCorretor(estado, interno) {
+    if (interno === undefined) interno = true;
     const r = estado.respostas;
     const est = estado.estimativa || {};
     const tempo = estado.tempoCalculado || {};
     const linhas = [];
 
     linhas.push('Lead simulou possibilidade de sair do aluguel.');
+    if (interno && estado.temperatura) {
+      linhas.push('Temperatura: ' + ROTULOS.temperatura[estado.temperatura.nivel] + ' (' + estado.temperatura.pontos + ' pontos)');
+    }
     if (estado.lead.nome) linhas.push('Nome: ' + estado.lead.nome);
     linhas.push('Renda familiar: ' + (brl(estado.lead.renda) || 'Não informada'));
     linhas.push('Aluguel atual: ' + (brl(r.aluguel) || 'Não informado'));
@@ -145,14 +251,23 @@ window.CRM = (function () {
     linhas.push('Pessoas na família: ' + (r.pessoas === 5 ? '5 ou mais' : (r.pessoas || 'Não informado')));
     linhas.push('Possui imóvel: ' + (r.possuiImovel == null ? 'Não informado' : (r.possuiImovel ? 'Sim' : 'Não')));
     linhas.push('Objetivo: ' + (ROTULOS.objetivo[r.objetivo] || 'Não informado'));
+    linhas.push('Prazo para decidir: ' + (ROTULOS.prazo[r.prazo] || 'Não informado'));
+    linhas.push('Pronto para seguir: ' + (ROTULOS.pronto[r.pronto] || 'Não informado'));
+    linhas.push('Momento: ' + (ROTULOS.momento[r.momento] || 'Não informado'));
+    linhas.push('Já tentou financiar: ' + (ROTULOS.jaFinanciou[r.jaFinanciou] || 'Não informado') +
+      (interno && r.jaFinanciou === 'nao-consegui' ? ' (vale perguntar o motivo)' : ''));
 
-    if (est.faixaFinanciamento) {
+    if (est.status === 'estimado') {
       linhas.push('Estimativa de financiamento: ' + textoFaixa(est.faixaFinanciamento));
       linhas.push('Estimativa de imóvel: ' + textoFaixa(est.faixaImovel));
     } else if (est.status === 'fora-das-faixas') {
       linhas.push('Renda acima das faixas configuradas. Avaliar outras linhas.');
-    } else if (est.status === 'depende-de-recursos') {
-      linhas.push('Renda comporta parcela, mas faltam recursos para entrada.');
+    } else if (est.status === 'abaixo-do-minimo') {
+      linhas.push('Estimativa abaixo do imóvel mínimo (' + brl(est.valorMinimoImovel) + '). Financiamento pela renda: ' + textoFaixa(est.faixaFinanciamento));
+    }
+    if (est.imovelReferencia) {
+      linhas.push('Entrada estimada: ' + brl(est.entradaNecessaria) +
+        (est.complementoEntrada > 0 ? ' (faltam cerca de ' + brl(est.complementoEntrada) + ')' : ' (coberta)'));
     }
 
     return linhas.join('\n');
@@ -174,7 +289,8 @@ window.CRM = (function () {
       return Promise.resolve({ ok: true, simulado: true, payload: payload });
     }
 
-    const corpo = JSON.stringify(payload);
+    // O JSON leva os campos planos no primeiro nível também, para facilitar o mapeamento
+    const corpo = JSON.stringify(Object.assign({}, payload.campos, payload));
     return fetch(cfg.crm.webhookUrl, {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json' }, cfg.crm.headers || {}),
@@ -183,8 +299,19 @@ window.CRM = (function () {
     }).then(function (res) {
       return { ok: res.ok, status: res.status, payload: payload };
     }).catch(function (erro) {
-      console.warn('[Calculadora] falha ao enviar ao CRM', erro);
-      return { ok: false, erro: erro, payload: payload };
+      if (!cfg.crm.reenviarComoFormularioSeBloquear) {
+        console.warn('[Calculadora] falha ao enviar ao CRM', erro);
+        return { ok: false, erro: erro, payload: payload };
+      }
+      // Plano B: formulário simples não passa pela checagem de CORS do navegador
+      const form = new URLSearchParams();
+      Object.keys(payload.campos).forEach(function (k) { form.append(k, payload.campos[k]); });
+      return fetch(cfg.crm.webhookUrl, { method: 'POST', mode: 'no-cors', body: form, keepalive: true })
+        .then(function () { return { ok: true, formulario: true, payload: payload }; })
+        .catch(function (erro2) {
+          console.warn('[Calculadora] falha ao enviar ao CRM', erro2);
+          return { ok: false, erro: erro2, payload: payload };
+        });
     });
   }
 
@@ -192,7 +319,7 @@ window.CRM = (function () {
     const nome = estado.lead.nome ? estado.lead.nome.split(' ')[0] : '';
     const texto = 'Olá! ' + (nome ? 'Sou ' + nome + '. ' : '') +
       'Fiz a simulação de aluguel x financiamento e quero entender quais imóveis fazem sentido para mim.\n\n' +
-      resumoCorretor(estado);
+      resumoCorretor(estado, false);
     return 'https://wa.me/' + String(cfg.ctaFinal.whatsappNumero).replace(/\D/g, '') +
       '?text=' + encodeURIComponent(texto);
   }

@@ -21,7 +21,8 @@
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0,
       entradaResposta: null, entradaValor: 0,
       fgtsResposta: null, fgtsValor: 0,
-      pessoas: null, possuiImovel: null, objetivo: null
+      pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
     },
     tempoCalculado: null,
     totalPago: 0,
@@ -112,7 +113,8 @@
   function montarFluxo() {
     const fluxo = ['intro'];
     if (!estado.lead.renda) fluxo.push('renda');
-    fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'objetivo', 'calculando', 'resultado');
+    fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'jaFinanciou',
+      'objetivo', 'momento', 'prazo', 'pronto', 'calculando', 'resultado');
     estado.fluxo = fluxo;
   }
 
@@ -140,7 +142,9 @@
     nova.classList.add('ativa');
     estado.telaAtual = destino;
 
-    window.scrollTo({ top: 0, behavior: reduzirMovimento ? 'auto' : 'smooth' });
+    // Sobe até o início da calculadora (que pode estar no meio de uma página, como no GoHighLevel)
+    const inicio = $('#app').getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({ top: Math.max(0, inicio), behavior: reduzirMovimento ? 'auto' : 'smooth' });
     atualizarTopo();
     aoEntrar(destino);
 
@@ -364,6 +368,7 @@
       possuiImovel: r.possuiImovel
     }, cfg);
     estado.diagnostico = C.diagnostico(estado.estimativa, r, cfg);
+    estado.temperatura = C.temperaturaLead(r, estado.estimativa, cfg);
 
     const itens = $$('#checklist li');
     itens.forEach(function (li) { li.classList.remove('feito'); });
@@ -427,14 +432,20 @@
       html += linhaDado('Subsídio considerado', 'até ' + brl(est.subsidioEstimado), { nota: 'Depende das regras do programa' });
     }
 
+    const notaParcela = { nota: 'Prazo de ' + Math.round(est.prazoMeses / 12) + ' anos. Valor aproximado' };
+
     if (est.status === 'estimado') {
       html +=
-        linhaDado('Estimativa de faixa de financiamento', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
         linhaDado('Estimativa de faixa de imóvel', window.CRM.textoFaixa(est.faixaImovel), { destaque: true }) +
-        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês',
-          { nota: 'Prazo de ' + Math.round(est.prazoMeses / 12) + ' anos. Valor aproximado' });
-    } else if (est.status === 'depende-de-recursos') {
-      html += linhaDado('Estimativa de faixa de financiamento', 'Depende de recursos para entrada', { vazio: true, nota: 'Um especialista pode avaliar alternativas' });
+        linhaDado('Estimativa de faixa de financiamento', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês', notaParcela) +
+        linhaEntrada(est);
+    } else if (est.status === 'abaixo-do-minimo') {
+      html +=
+        linhaDado('Imóveis disponíveis', 'a partir de ' + brl(est.valorMinimoImovel), { destaque: true }) +
+        linhaDado('Financiamento estimado pela sua renda', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de referência', 'em torno de ' + brl(est.parcelaEstimada) + '/mês', notaParcela) +
+        linhaEntrada(est);
     } else {
       html += linhaDado('Estimativa de faixa de financiamento', 'Precisa de análise personalizada', { vazio: true });
     }
@@ -443,9 +454,13 @@
     montarComposicao(est, r);
 
     // Próximo passo
-    $('#resProximoTexto').textContent = est.status === 'estimado'
-      ? 'Sua estimativa aponta para imóveis entre ' + window.CRM.textoFaixa(est.faixaImovel) + '. Descubra quais possibilidades podem fazer sentido para o seu perfil.'
-      : 'Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.';
+    let proximo = 'Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.';
+    if (est.status === 'estimado') {
+      proximo = 'Sua estimativa aponta para imóveis entre ' + window.CRM.textoFaixa(est.faixaImovel) + '. Descubra quais possibilidades podem fazer sentido para o seu perfil.';
+    } else if (est.status === 'abaixo-do-minimo') {
+      proximo = 'Os imóveis começam em ' + brl(est.valorMinimoImovel) + '. Descubra com um especialista quais caminhos podem aproximar você desse valor.';
+    }
+    $('#resProximoTexto').textContent = proximo;
 
     // Mensagem
     const d = estado.diagnostico;
@@ -458,20 +473,33 @@
     montarFatores(est, r);
   }
 
+  // Entrada estimada para o imóvel e quanto falta além do que a pessoa informou
+  function linhaEntrada(est) {
+    if (est.complementoEntrada > 0) {
+      return linhaDado('Entrada estimada para esse imóvel', brl(est.entradaNecessaria),
+          { nota: 'Parte que o financiamento não cobre' }) +
+        linhaDado('Diferença a complementar', 'cerca de ' + brl(est.complementoEntrada),
+          { vazio: true, nota: 'Em muitos empreendimentos dá para parcelar. O especialista confirma' });
+    }
+    return linhaDado('Entrada estimada para esse imóvel', brl(est.entradaNecessaria),
+      { nota: 'Coberta pelo que você informou' });
+  }
+
   function montarComposicao(est, r) {
     const alvo = $('#composicao');
-    if (est.status !== 'estimado' || !est.valorImovel) { alvo.innerHTML = ''; return; }
+    if ((est.status !== 'estimado' && est.status !== 'abaixo-do-minimo') || !est.imovelReferencia) { alvo.innerHTML = ''; return; }
 
     const partes = [
       { nome: 'Financiamento', valor: est.financiamento, cls: 'c-fin' },
       { nome: 'Entrada', valor: r.entradaResposta === 'sim' ? r.entradaValor : 0, cls: 'c-ent' },
       { nome: 'FGTS', valor: r.fgtsResposta === 'sim' ? r.fgtsValor : 0, cls: 'c-fgts' },
-      { nome: 'Subsídio', valor: est.subsidioEstimado, cls: 'c-sub' }
+      { nome: 'Subsídio', valor: est.subsidioEstimado, cls: 'c-sub' },
+      { nome: 'A complementar', valor: est.complementoEntrada, cls: 'c-falta' }
     ].filter(function (p) { return p.valor > 0; });
 
     const total = partes.reduce(function (s, p) { return s + p.valor; }, 0) || 1;
     alvo.innerHTML =
-      '<p class="composicao-titulo">Como a estimativa se forma</p>' +
+      '<p class="composicao-titulo">Como fecha um imóvel de ' + brl(est.imovelReferencia) + '</p>' +
       '<div class="composicao-barra">' + partes.map(function (p) {
         return '<span class="' + p.cls + '" style="width:' + (p.valor / total * 100) + '%"></span>';
       }).join('') + '</div>' +
@@ -559,12 +587,13 @@
   function refazer() {
     Object.assign(estado.respostas, {
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0, entradaResposta: null, entradaValor: 0,
-      fgtsResposta: null, fgtsValor: 0, pessoas: null, possuiImovel: null, objetivo: null
+      fgtsResposta: null, fgtsValor: 0, pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
     });
     // Se a renda foi perguntada aqui, pergunta de novo
     if (estado.lead.rendaPerguntadaAqui) { estado.lead.renda = 0; estado.lead.rendaPerguntadaAqui = false; }
     estado.enviado = false;
-    $$('input').forEach(function (i) { i.value = ''; });
+    $$('#app input').forEach(function (i) { i.value = ''; });
     $$('.opcao.selecionada').forEach(function (o) { o.classList.remove('selecionada'); o.setAttribute('aria-pressed', 'false'); });
     $$('.revela').forEach(function (r) { r.hidden = true; });
     $$('.dica-viva').forEach(function (d) { d.textContent = ''; });
@@ -654,7 +683,7 @@
     }
     if (chave === 'pessoas') r.pessoas = parseInt(valor, 10);
     if (chave === 'possuiImovel') r.possuiImovel = valor === 'sim';
-    if (chave === 'objetivo') r.objetivo = valor;
+    if (['objetivo', 'jaFinanciou', 'momento', 'prazo', 'pronto'].indexOf(chave) >= 0) r[chave] = valor;
   }
 
   /* ---------- Início ---------- */

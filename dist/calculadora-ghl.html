@@ -1,0 +1,2823 @@
+<!-- CALCULADORA ALUGUEL x FINANCIAMENTO MCMV (versao arquivo unico)
+     Gerado por tools/gerar-ghl.py. Para mudar as regras, edite js/config.js e gere de novo,
+     ou procure por "window.CALC_CONFIG" aqui dentro (webhookUrl, whatsappNumero, marca). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+#calc-mcmv { font-family: var(--fonte); color: var(--texto); line-height: 1.5; background: var(--fundo); text-align: left; }
+#calc-mcmv h1, #calc-mcmv h2, #calc-mcmv h3, #calc-mcmv p, #calc-mcmv ul, #calc-mcmv li, #calc-mcmv dl, #calc-mcmv dt, #calc-mcmv dd, #calc-mcmv button, #calc-mcmv input, #calc-mcmv label, #calc-mcmv small, #calc-mcmv strong, #calc-mcmv span, #calc-mcmv div, #calc-mcmv section, #calc-mcmv article, #calc-mcmv header, #calc-mcmv main, #calc-mcmv b { font-family: inherit; font-size: inherit; line-height: inherit; color: inherit; text-transform: none; border: 0 none; padding: 0; margin: 0; background: none; box-shadow: none; text-shadow: none; float: none; width: auto; max-width: none; min-height: 0; height: auto; }
+/* ==========================================================================
+   CALCULADORA ALUGUEL x FINANCIAMENTO MCMV
+   Mobile first. As cores ficam nas vari\e1 veis abaixo.
+   ========================================================================== */
+#calc-mcmv {
+  --verde-900: #0B3B2E;
+  --verde-800: #0F4D3C;
+  --verde-600: #15803D;
+  --verde-500: #16A34A;
+  --verde-100: #DCFCE7;
+  --verde-50:  #F0FDF4;
+
+  --laranja-500: #F59E0B;
+  --laranja-600: #D97706;
+  --laranja-100: #FEF3C7;
+
+  --azul-500: #2563EB;
+  --roxo-500: #7C3AED;
+
+  --texto: #0F172A;
+  --texto-2: #475569;
+  --texto-3: #94A3B8;
+  --borda: #E2E8F0;
+  --fundo: #F4F7F5;
+  --card: #FFFFFF;
+
+  --raio: 16px;
+  --raio-g: 22px;
+  --sombra: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .06);
+  --sombra-forte: 0 12px 40px rgba(11, 59, 46, .18);
+  --fonte: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+#calc-mcmv * { box-sizing: border-box; }
+
+#calc-mcmv { -webkit-text-size-adjust: 100%; }
+
+#calc-mcmv {
+  margin: 0;
+  font-family: var(--fonte);
+  color: var(--texto);
+  background: var(--fundo);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#calc-mcmv [hidden] { display: none !important; }
+
+#calc-mcmv button { font: inherit; cursor: pointer; }
+
+#calc-mcmv input { font: inherit; }
+/* ---------- Estrutura ---------- */
+#calc-mcmv .app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  transition: background-color .5s ease;
+}
+
+#calc-mcmv .app.modo-escuro { background: var(--verde-900); }
+
+#calc-mcmv .topo {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-top: max(12px, env(safe-area-inset-top));
+  background: rgba(244, 247, 245, .92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background-color .5s ease;
+}
+
+#calc-mcmv .modo-escuro .topo { background: rgba(11, 59, 46, .92); }
+
+#calc-mcmv .btn-voltar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--texto);
+  display: grid;
+  place-items: center;
+  box-shadow: var(--sombra);
+}
+
+#calc-mcmv .modo-escuro .btn-voltar { background: rgba(255,255,255,.1); color: #fff; box-shadow: none; }
+
+#calc-mcmv .marca {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--verde-900);
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+
+#calc-mcmv .marca img { height: 28px; display: block; }
+
+#calc-mcmv .modo-escuro .marca { color: #fff; }
+
+#calc-mcmv .progresso { flex: 1; min-width: 0; margin-left: auto; max-width: 260px; }
+
+#calc-mcmv .progresso-texto {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto-2);
+  text-align: right;
+  margin-bottom: 4px;
+}
+
+#calc-mcmv .modo-escuro .progresso-texto { color: rgba(255,255,255,.75); }
+
+#calc-mcmv .progresso-barra { height: 6px; border-radius: 99px; background: var(--borda); overflow: hidden; }
+
+#calc-mcmv .modo-escuro .progresso-barra { background: rgba(255,255,255,.15); }
+
+#calc-mcmv .progresso-preenchido {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--verde-500), #4ADE80);
+  transition: width .5s cubic-bezier(.2,.8,.2,1);
+}
+
+#calc-mcmv .palco {
+  flex: 1;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  padding-bottom: max(40px, env(safe-area-inset-bottom));
+}
+/* ---------- Telas ---------- */
+#calc-mcmv .tela { display: none; }
+
+#calc-mcmv .tela.ativa { display: block; animation: cm-entrar .45s cubic-bezier(.2,.8,.2,1) both; }
+
+#calc-mcmv .tela.ativa.volta { animation-name: cm-entrarVolta; }
+
+#calc-mcmv .tela.tremer .erro { animation: cm-tremer .35s ease; }
+
+@keyframes cm-entrar { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+
+@keyframes cm-entrarVolta { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+
+@keyframes cm-tremer { 0%,100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+
+@keyframes cm-surgir { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+/* ---------- Tipografia ---------- */
+#calc-mcmv .kicker {
+  margin: 12px 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--verde-600);
+}
+
+#calc-mcmv .kicker-claro { color: #4ADE80; }
+
+#calc-mcmv .titulo-grande {
+  margin: 8px 0 12px;
+  font-size: clamp(26px, 7vw, 34px);
+  line-height: 1.15;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+
+#calc-mcmv .pergunta {
+  margin: 0 0 24px;
+  font-size: clamp(24px, 6.4vw, 30px);
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+#calc-mcmv .subtitulo { margin: 0 0 24px; font-size: 16px; color: var(--texto-2); }
+
+#calc-mcmv .apoio { margin: -12px 0 20px; color: var(--texto-2); }
+/* ---------- Intro ---------- */
+#calc-mcmv .intro-icone {
+  width: 88px;
+  height: 88px;
+  margin-top: 16px;
+  border-radius: 24px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--verde-800), var(--verde-500));
+  box-shadow: var(--sombra-forte);
+}
+
+#calc-mcmv .intro-icone svg { width: 48px; height: 48px; }
+
+#calc-mcmv .intro-lista { list-style: none; margin: 0 0 32px; padding: 0; display: grid; gap: 10px; }
+
+#calc-mcmv .intro-lista li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  font-weight: 600;
+}
+
+#calc-mcmv .intro-lista span {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 800;
+  color: var(--verde-600);
+  background: var(--verde-100);
+}
+
+#calc-mcmv .rodape-mini { text-align: center; font-size: 13px; color: var(--texto-3); margin: 14px 0 0; }
+/* ---------- Bot\f5 es ---------- */
+#calc-mcmv .btn-principal {
+  width: 100%;
+  min-height: 58px;
+  margin-top: 28px;
+  padding: 16px 20px;
+  border: 0;
+  border-radius: var(--raio);
+  background: var(--verde-900);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: var(--sombra-forte);
+  transition: transform .15s ease, box-shadow .2s ease, background-color .2s ease;
+}
+
+#calc-mcmv .btn-principal:hover { background: var(--verde-800); }
+
+#calc-mcmv .btn-principal:active { transform: scale(.98); }
+
+#calc-mcmv .btn-principal:focus-visible, #calc-mcmv .opcao:focus-visible, #calc-mcmv .aba:focus-visible, #calc-mcmv .btn-voltar:focus-visible, #calc-mcmv .btn-texto:focus-visible {
+  outline: 3px solid #4ADE80;
+  outline-offset: 2px;
+}
+
+#calc-mcmv .btn-claro { background: #fff; color: var(--verde-900); }
+
+#calc-mcmv .btn-claro:hover { background: var(--verde-50); }
+
+#calc-mcmv .btn-cta {
+  background: linear-gradient(135deg, var(--verde-500), var(--verde-600));
+  font-size: 17px;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  animation: cm-pulsar 2.4s ease-in-out infinite;
+}
+
+#calc-mcmv .btn-cta:hover { background: linear-gradient(135deg, var(--verde-600), var(--verde-600)); }
+
+@keyframes cm-pulsar {
+  0%, 100% { box-shadow: 0 10px 30px rgba(22, 163, 74, .35), 0 0 0 0 rgba(74, 222, 128, .5); }
+  50% { box-shadow: 0 10px 30px rgba(22, 163, 74, .35), 0 0 0 10px rgba(74, 222, 128, 0); }
+}
+
+#calc-mcmv .btn-texto {
+  display: block;
+  margin: 8px auto 0;
+  padding: 12px;
+  border: 0;
+  background: none;
+  color: var(--texto-2);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+/* ---------- Campos ---------- */
+#calc-mcmv .campo-moeda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  min-height: 76px;
+  background: var(--card);
+  border: 2px solid var(--borda);
+  border-radius: var(--raio-g);
+  box-shadow: var(--sombra);
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+#calc-mcmv .campo-moeda:focus-within { border-color: var(--verde-500); box-shadow: 0 0 0 4px var(--verde-100); }
+
+#calc-mcmv .campo-moeda .prefixo { font-size: 22px; font-weight: 700; color: var(--texto-3); }
+
+#calc-mcmv .campo-moeda input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--texto);
+}
+
+#calc-mcmv .campo-moeda input::placeholder { color: #CBD5E1; }
+
+#calc-mcmv #inFgts::placeholder { font-size: 18px; font-weight: 600; }
+
+#calc-mcmv .dica-viva { min-height: 24px; margin: 12px 4px 0; color: var(--texto-2); font-size: 15px; }
+
+#calc-mcmv .dica-viva strong { color: var(--verde-600); }
+
+#calc-mcmv .erro {
+  margin: 16px 0 -12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #FEF2F2;
+  color: #B91C1C;
+  font-size: 14px;
+  font-weight: 600;
+}
+/* ---------- Op\e7 \f5 es ---------- */
+#calc-mcmv .opcoes { display: grid; gap: 10px; }
+
+#calc-mcmv .opcoes-grade { grid-template-columns: 1fr 1fr; }
+
+#calc-mcmv .opcoes-grade .opcao-larga { grid-column: 1 / -1; }
+
+#calc-mcmv .opcoes-numeros { grid-template-columns: repeat(5, 1fr); }
+
+#calc-mcmv .opcoes-numeros .opcao { min-height: 72px; font-size: 22px; font-weight: 800; text-align: center; justify-content: center; }
+
+#calc-mcmv .opcao {
+  position: relative;
+  min-height: 60px;
+  padding: 14px 18px;
+  border: 2px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--card);
+  color: var(--texto);
+  font-size: 16px;
+  font-weight: 600;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  box-shadow: var(--sombra);
+  transition: border-color .15s ease, background-color .15s ease, transform .15s ease;
+}
+
+#calc-mcmv .opcao:hover { border-color: #A7F3D0; }
+
+#calc-mcmv .opcao:active { transform: scale(.98); }
+
+#calc-mcmv .opcao.selecionada {
+  border-color: var(--verde-500);
+  background: var(--verde-50);
+  color: var(--verde-900);
+}
+
+#calc-mcmv .opcoes:not(.opcoes-numeros) .opcao.selecionada::after {
+  content: '';
+  position: absolute;
+  right: 16px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--verde-500) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12l4 4 8-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+  animation: cm-surgir .2s ease both;
+}
+
+#calc-mcmv .opcoes-grade .opcao { font-size: 15px; padding-right: 40px; }
+
+#calc-mcmv .revela { margin-top: 20px; animation: cm-surgir .3s ease both; }
+
+#calc-mcmv .revela-titulo { margin: 0 0 10px; font-weight: 700; }
+
+#calc-mcmv .revela-titulo span, #calc-mcmv .tempo-exato-titulo span { font-weight: 500; color: var(--texto-3); }
+
+#calc-mcmv .tempo-exato { margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--borda); }
+
+#calc-mcmv .tempo-exato-titulo { margin: 0 0 10px; font-size: 15px; font-weight: 700; }
+
+#calc-mcmv .tempo-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+#calc-mcmv .campo-numero {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  min-height: 60px;
+  background: var(--card);
+  border: 2px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+#calc-mcmv .campo-numero:focus-within { border-color: var(--verde-500); }
+
+#calc-mcmv .campo-numero input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font-size: 22px;
+  font-weight: 800;
+  -moz-appearance: textfield;
+}
+
+#calc-mcmv .campo-numero input::-webkit-outer-spin-button, #calc-mcmv .campo-numero input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+#calc-mcmv .campo-numero span { color: var(--texto-2); font-weight: 600; }
+/* ---------- Revela\e7 \e3 o: passado ---------- */
+#calc-mcmv .tela-revelacao { color: #fff; text-align: center; padding-top: 12px; }
+
+#calc-mcmv .titulo-revelacao { margin: 0; font-size: 20px; font-weight: 600; color: rgba(255,255,255,.85); }
+
+#calc-mcmv .numero-gigante {
+  margin: 8px 0 8px;
+  font-size: clamp(44px, 14vw, 72px);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  color: var(--laranja-500);
+  font-variant-numeric: tabular-nums;
+}
+
+#calc-mcmv .revelacao-detalhe { margin: 0 0 24px; color: rgba(255,255,255,.8); font-size: 16px; }
+
+#calc-mcmv .revelacao-detalhe strong { color: #fff; }
+
+#calc-mcmv .grafico-meses {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  padding: 18px;
+  border-radius: var(--raio-g);
+  background: rgba(255,255,255,.06);
+}
+
+#calc-mcmv .grafico-meses span {
+  width: 12px; height: 12px;
+  border-radius: 3px;
+  background: var(--laranja-500);
+  opacity: 0;
+  animation: cm-surgir .35s ease forwards;
+}
+
+#calc-mcmv .grafico-meses small { width: 100%; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,.65); }
+
+#calc-mcmv .nota-estimativa {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--texto-2);
+  text-align: left;
+}
+
+#calc-mcmv .nota-estimativa::before {
+  content: 'i';
+  flex: none;
+  width: 18px; height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 11px; font-weight: 800; font-style: italic;
+  color: #fff;
+  background: var(--texto-3);
+}
+
+#calc-mcmv .tela-revelacao .nota-estimativa { color: rgba(255,255,255,.7); }
+
+#calc-mcmv .tela-revelacao .nota-estimativa::before { background: rgba(255,255,255,.3); }
+/* ---------- Futuro ---------- */
+#calc-mcmv .abas-horizonte {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  padding: 6px;
+  border-radius: var(--raio);
+  background: #E6ECE9;
+}
+
+#calc-mcmv .aba {
+  min-height: 46px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--texto-2);
+  font-weight: 700;
+  transition: background-color .2s ease, color .2s ease;
+}
+
+#calc-mcmv .aba.ativa { background: var(--card); color: var(--verde-900); box-shadow: var(--sombra); }
+
+#calc-mcmv .futuro-destaque {
+  margin: 20px 0 8px;
+  padding: 24px 20px;
+  text-align: center;
+  border-radius: var(--raio-g);
+  background: var(--card);
+  box-shadow: var(--sombra);
+}
+
+#calc-mcmv .futuro-rotulo { font-weight: 700; color: var(--texto-2); }
+
+#calc-mcmv .numero-grande {
+  margin: 4px 0;
+  font-size: clamp(38px, 11vw, 54px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.1;
+  color: var(--laranja-600);
+  font-variant-numeric: tabular-nums;
+}
+
+#calc-mcmv .futuro-sub { color: var(--texto-2); }
+/* Barras verticais */
+#calc-mcmv .barras-futuro {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 10px;
+  height: 220px;
+  margin-top: 20px;
+  padding: 16px 12px 12px;
+  border-radius: var(--raio-g);
+  background: var(--card);
+  box-shadow: var(--sombra);
+}
+
+#calc-mcmv .barras-futuro .barra {
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+#calc-mcmv .barras-futuro .barra-rotulo { font-size: 12px; font-weight: 700; color: var(--texto-2); }
+
+#calc-mcmv .barras-futuro .barra-trilho { flex: 1; width: 100%; max-width: 56px; display: flex; align-items: flex-end; }
+
+#calc-mcmv .barras-futuro .barra-fill {
+  width: 100%;
+  height: var(--tam);
+  border-radius: 10px 10px 4px 4px;
+  background: #FCD9A1;
+  transform-origin: bottom;
+  animation: cm-crescerY .8s cubic-bezier(.2,.8,.2,1) var(--atraso) both;
+}
+
+#calc-mcmv .barras-futuro .barra-valor { font-size: 11px; font-weight: 700; color: var(--texto-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+#calc-mcmv .barras-futuro .barra-passado .barra-fill { background: var(--texto-3); }
+
+#calc-mcmv .barras-futuro .barra-destaque .barra-fill { background: linear-gradient(180deg, var(--laranja-500), var(--laranja-600)); }
+
+#calc-mcmv .barras-futuro .barra-destaque .barra-valor { color: var(--laranja-600); }
+
+@keyframes cm-crescerY { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+@keyframes cm-crescerX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+#calc-mcmv .reflexao {
+  margin-top: 24px;
+  padding: 20px;
+  border-radius: var(--raio-g);
+  background: linear-gradient(135deg, var(--verde-900), var(--verde-800));
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+#calc-mcmv .reflexao p { margin: 0; }
+/* ---------- Calculando ---------- */
+#calc-mcmv .tela-calculando { text-align: center; padding-top: 40px; }
+
+#calc-mcmv .loader {
+  width: 72px; height: 72px;
+  margin: 0 auto 24px;
+  border-radius: 50%;
+  border: 6px solid var(--verde-100);
+  border-top-color: var(--verde-500);
+  animation: cm-girar 0.9s linear infinite;
+}
+
+@keyframes cm-girar { to { transform: rotate(360deg); } }
+
+#calc-mcmv .checklist { list-style: none; margin: 0 auto; padding: 0; max-width: 340px; text-align: left; display: grid; gap: 12px; }
+
+#calc-mcmv .checklist li {
+  display: flex; align-items: center; gap: 12px;
+  color: var(--texto-3);
+  font-weight: 600;
+  transition: color .3s ease;
+}
+
+#calc-mcmv .checklist li::before {
+  content: '';
+  flex: none;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--borda);
+  transition: all .3s ease;
+}
+
+#calc-mcmv .checklist li.feito { color: var(--texto); }
+
+#calc-mcmv .checklist li.feito::before {
+  border-color: var(--verde-500);
+  background: var(--verde-500) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12l4 4 8-8' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 14px no-repeat;
+}
+/* ---------- Resultado ---------- */
+#calc-mcmv .tela-resultado > * { animation: cm-surgir .5s ease both; }
+
+#calc-mcmv .tela-resultado > *:nth-child(2) { animation-delay: .08s; }
+
+#calc-mcmv .tela-resultado > *:nth-child(3) { animation-delay: .16s; }
+
+#calc-mcmv .tela-resultado > *:nth-child(4) { animation-delay: .24s; }
+
+#calc-mcmv .tela-resultado > *:nth-child(5) { animation-delay: .32s; }
+
+#calc-mcmv .res-cabecalho { padding-top: 8px; }
+
+#calc-mcmv .res-cabecalho .subtitulo { margin-bottom: 20px; }
+
+#calc-mcmv .selo-estimativa, #calc-mcmv .tag-estimativa {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--laranja-600);
+  background: var(--laranja-100);
+}
+
+#calc-mcmv .selo-estimativa::before, #calc-mcmv .tag-estimativa::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* Linha do tempo */
+#calc-mcmv .linha-tempo { display: grid; gap: 0; margin-bottom: 16px; }
+
+#calc-mcmv .lt-bloco { padding: 22px 20px; border-radius: var(--raio-g); }
+
+#calc-mcmv .lt-bloco p { margin: 0; }
+
+#calc-mcmv .lt-rotulo {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+#calc-mcmv .lt-passado { background: var(--verde-900); color: rgba(255,255,255,.85); }
+
+#calc-mcmv .lt-passado .lt-rotulo { color: #4ADE80; }
+
+#calc-mcmv .lt-passado strong {
+  display: block;
+  margin: 4px 0;
+  font-size: clamp(36px, 11vw, 52px);
+  font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.1;
+  color: var(--laranja-500);
+  font-variant-numeric: tabular-nums;
+}
+
+#calc-mcmv .lt-seta {
+  justify-self: center;
+  width: 48px; height: 48px;
+  margin: -10px 0;
+  z-index: 1;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--card);
+  color: var(--verde-600);
+  box-shadow: var(--sombra);
+}
+
+#calc-mcmv .lt-proximo { background: var(--verde-50); border: 2px solid var(--verde-100); color: var(--verde-900); font-weight: 600; }
+
+#calc-mcmv .lt-proximo .lt-rotulo { color: var(--verde-600); }
+/* Cards */
+#calc-mcmv .card {
+  margin-bottom: 16px;
+  padding: 20px;
+  border-radius: var(--raio-g);
+  background: var(--card);
+  box-shadow: var(--sombra);
+}
+
+#calc-mcmv .card-titulo { margin: 0 0 16px; font-size: 18px; font-weight: 800; letter-spacing: -.01em; }
+
+#calc-mcmv .cenarios { display: grid; gap: 16px; margin-bottom: 16px; }
+
+#calc-mcmv .cenarios .card { margin: 0; }
+
+#calc-mcmv .cenario header { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+
+#calc-mcmv .cenario h3 { margin: 0; font-size: 17px; font-weight: 800; }
+
+#calc-mcmv .cenario .tag-estimativa { margin-left: auto; }
+
+#calc-mcmv .cenario-icone {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  display: grid; place-items: center;
+}
+
+#calc-mcmv .cenario-atual .cenario-icone { background: var(--laranja-100); color: var(--laranja-600); }
+
+#calc-mcmv .cenario-financiamento { border: 2px solid var(--verde-100); }
+
+#calc-mcmv .cenario-financiamento .cenario-icone { background: var(--verde-100); color: var(--verde-600); }
+
+#calc-mcmv .dados { margin: 0; }
+
+#calc-mcmv .dado {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px solid var(--borda);
+}
+
+#calc-mcmv .dado dt { color: var(--texto-2); font-size: 14px; }
+
+#calc-mcmv .dado dt { flex: 1 1 auto; }
+
+#calc-mcmv .dado dd { flex: 0 1 60%; margin: 0; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+#calc-mcmv .dado dd small { display: block; margin-top: 2px; font-size: 12px; font-weight: 500; color: var(--texto-3); }
+
+#calc-mcmv .dado-vazio dd { color: var(--texto-3); font-weight: 600; }
+
+#calc-mcmv .dado-destaque { flex-direction: column; align-items: stretch; gap: 2px; }
+
+#calc-mcmv .dado-destaque dd { text-align: left; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
+
+#calc-mcmv .cenario-atual .dado-destaque dd { color: var(--laranja-600); }
+
+#calc-mcmv .cenario-financiamento .dado-destaque dd { color: var(--verde-600); }
+
+#calc-mcmv .dado-destaque.dado-vazio dd { font-size: 16px; color: var(--texto-3); }
+
+#calc-mcmv .nota-card {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #F8FAFC;
+  font-size: 12.5px;
+  color: var(--texto-2);
+}
+/* Composi\e7 \e3 o */
+#calc-mcmv .composicao:empty { display: none; }
+
+#calc-mcmv .composicao { margin-top: 8px; padding-top: 14px; border-top: 1px solid var(--borda); }
+
+#calc-mcmv .composicao-titulo { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--texto-2); }
+
+#calc-mcmv .composicao-barra { display: flex; height: 14px; border-radius: 99px; overflow: hidden; gap: 2px; background: var(--borda); }
+
+#calc-mcmv .composicao-barra span { transform-origin: left; animation: cm-crescerX .9s cubic-bezier(.2,.8,.2,1) .3s both; }
+
+#calc-mcmv .composicao-legenda { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+
+#calc-mcmv .composicao-legenda li { display: flex; align-items: center; gap: 8px; color: var(--texto-2); }
+
+#calc-mcmv .composicao-legenda i { width: 10px; height: 10px; border-radius: 3px; }
+
+#calc-mcmv .composicao-legenda b { margin-left: auto; color: var(--texto); font-variant-numeric: tabular-nums; }
+
+#calc-mcmv .c-fin { background: var(--verde-500); }
+
+#calc-mcmv .c-ent { background: var(--azul-500); }
+
+#calc-mcmv .c-fgts { background: var(--roxo-500); }
+
+#calc-mcmv .c-sub { background: var(--laranja-500); }
+
+#calc-mcmv .c-falta { background: repeating-linear-gradient(45deg, #CBD5E1 0 4px, #E2E8F0 4px 8px); }
+/* Mensagem personalizada */
+#calc-mcmv .mensagem { display: flex; gap: 14px; align-items: flex-start; }
+
+#calc-mcmv .mensagem h3 { margin: 0 0 6px; font-size: 17px; line-height: 1.3; font-weight: 800; }
+
+#calc-mcmv .mensagem p { margin: 0; color: var(--texto-2); font-size: 15px; }
+
+#calc-mcmv .mensagem-icone {
+  flex: none;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 20px;
+}
+
+#calc-mcmv .mensagem-positivo { background: var(--verde-50); box-shadow: none; border: 2px solid var(--verde-100); }
+
+#calc-mcmv .mensagem-positivo .mensagem-icone { background: var(--verde-500); color: #fff; }
+
+#calc-mcmv .mensagem-positivo .mensagem-icone::before { content: '\2713 '; }
+
+#calc-mcmv .mensagem-atencao { background: #FFFBEB; box-shadow: none; border: 2px solid var(--laranja-100); }
+
+#calc-mcmv .mensagem-atencao .mensagem-icone { background: var(--laranja-500); color: #fff; }
+
+#calc-mcmv .mensagem-atencao .mensagem-icone::before { content: '!'; }
+/* Barras horizontais */
+#calc-mcmv .barras-longo { display: grid; gap: 14px; }
+
+#calc-mcmv .barras-longo .barra {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "rotulo valor" "trilho trilho";
+  gap: 6px 12px;
+}
+
+#calc-mcmv .barras-longo .barra-rotulo { grid-area: rotulo; font-weight: 700; font-size: 14px; }
+
+#calc-mcmv .barras-longo .barra-valor { grid-area: valor; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+#calc-mcmv .barras-longo .barra-trilho { grid-area: trilho; height: 14px; border-radius: 99px; background: #F1F5F9; overflow: hidden; }
+
+#calc-mcmv .barras-longo .barra-fill {
+  display: block;
+  width: var(--tam);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--laranja-500), var(--laranja-600));
+  transform-origin: left;
+  animation: cm-crescerX .9s cubic-bezier(.2,.8,.2,1) var(--atraso) both;
+}
+
+#calc-mcmv .barras-longo .barra-passado .barra-fill { background: var(--texto-3); }
+
+#calc-mcmv .barras-longo .barra-passado .barra-valor { color: var(--texto-2); }
+/* Fatores */
+#calc-mcmv .fatores { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+
+#calc-mcmv .fator { display: flex; gap: 12px; align-items: flex-start; }
+
+#calc-mcmv .fator strong { display: block; font-size: 15px; }
+
+#calc-mcmv .fator p { margin: 2px 0 0; font-size: 14px; color: var(--texto-2); }
+
+#calc-mcmv .fator-icone {
+  flex: none;
+  width: 26px; height: 26px;
+  margin-top: 1px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 13px; font-weight: 800; color: #fff;
+}
+
+#calc-mcmv .fator-ok .fator-icone { background: var(--verde-500); }
+
+#calc-mcmv .fator-ok .fator-icone::before { content: '\2713 '; }
+
+#calc-mcmv .fator-pendente .fator-icone { background: var(--laranja-500); }
+
+#calc-mcmv .fator-pendente .fator-icone::before { content: '?'; }
+
+#calc-mcmv .fator-atencao .fator-icone { background: #DC2626; }
+
+#calc-mcmv .fator-atencao .fator-icone::before { content: '!'; }
+
+#calc-mcmv .fator-neutro .fator-icone { background: var(--texto-3); }
+
+#calc-mcmv .fator-neutro .fator-icone::before { content: 'i'; font-style: italic; }
+/* CTA final */
+#calc-mcmv .cta-final {
+  margin: 24px 0 16px;
+  padding: 28px 20px;
+  border-radius: 26px;
+  text-align: center;
+  color: #fff;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(74, 222, 128, .25), transparent 55%),
+    linear-gradient(160deg, var(--verde-900), #062A20);
+  box-shadow: var(--sombra-forte);
+}
+
+#calc-mcmv .cta-final h2 { margin: 0 0 12px; font-size: clamp(22px, 6vw, 28px); line-height: 1.2; font-weight: 800; letter-spacing: -.02em; }
+
+#calc-mcmv .cta-final p { margin: 0; color: rgba(255,255,255,.8); font-size: 15px; }
+
+#calc-mcmv .cta-final .btn-principal { margin-top: 22px; }
+
+#calc-mcmv .cta-feedback { min-height: 20px; margin-top: 12px !important; font-weight: 600; color: #4ADE80 !important; }
+
+#calc-mcmv .aviso-legal {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--texto-3);
+  text-align: center;
+}
+/* ---------- Desktop ---------- */
+@media (min-width: 720px) {
+#calc-mcmv .palco { padding-top: 40px; }
+
+#calc-mcmv .tela-resultado { width: min(960px, calc(100vw - 48px)); margin-left: 50%; transform: translateX(-50%); }
+
+#calc-mcmv .tela-resultado.ativa { animation: none; }
+
+#calc-mcmv .linha-tempo { grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+
+#calc-mcmv .lt-seta { align-self: center; margin: 0 -14px; transform: rotate(-90deg); }
+
+#calc-mcmv .lt-bloco { display: flex; flex-direction: column; justify-content: center; }
+
+#calc-mcmv .cenarios { grid-template-columns: 1fr 1fr; align-items: start; }
+
+#calc-mcmv .fatores { grid-template-columns: 1fr 1fr; gap: 18px 28px; }
+
+#calc-mcmv .cta-final { padding: 40px 48px; }
+
+#calc-mcmv .cta-final .btn-principal { max-width: 420px; margin-left: auto; margin-right: auto; }
+
+#calc-mcmv .barras-futuro { height: 260px; }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+#calc-mcmv *, #calc-mcmv *::before, #calc-mcmv *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; }
+
+}
+
+</style>
+<div id="calc-mcmv">
+<div class="app" id="app">
+
+    <!-- Topo -->
+    <header class="topo">
+      <button class="btn-voltar" id="btnVoltar" type="button" aria-label="Voltar" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M15 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="marca" id="marca"></div>
+      <div class="progresso" id="progresso" hidden>
+        <span class="progresso-texto" id="progressoTexto">Etapa 1 de 7</span>
+        <div class="progresso-barra"><div class="progresso-preenchido" id="progressoBarra"></div></div>
+      </div>
+    </header>
+
+    <main class="palco" id="palco">
+
+      <!-- INTRO -->
+      <section class="tela ativa" data-tela="intro">
+        <div class="intro-icone" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64"><path d="M10 30L32 12l22 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 26v26h32V26" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/><path d="M27 52V38h10v14" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/></svg>
+        </div>
+        <h1 class="titulo-grande" id="saudacao">Ol&#xe1;! Vamos entender o seu cen&#xe1;rio.</h1>
+        <p class="subtitulo">Em menos de 2 minutos voc&#xea; vai ver quanto o aluguel j&#xe1; representou na sua vida e uma estimativa do seu cen&#xe1;rio de financiamento.</p>
+        <ul class="intro-lista">
+          <li><span>1</span>Seu cen&#xe1;rio atual</li>
+          <li><span>2</span>Quanto o aluguel j&#xe1; custou</li>
+          <li><span>3</span>Sua estimativa de financiamento</li>
+        </ul>
+        <button class="btn-principal" type="button" data-acao="comecar">Come&#xe7;ar meu diagn&#xf3;stico</button>
+        <p class="rodape-mini">Simula&#xe7;&#xe3;o gratuita. Seus dados ficam protegidos.</p>
+      </section>
+
+      <!-- RENDA (s&#xf3; aparece se n&#xe3;o veio da LP) -->
+      <section class="tela" data-tela="renda" data-etapa>
+        <p class="kicker">Antes de come&#xe7;ar</p>
+        <h2 class="pergunta">Qual &#xe9; a renda mensal da sua fam&#xed;lia?</h2>
+        <p class="apoio">Some a renda de todos que v&#xe3;o participar da compra.</p>
+        <label class="campo-moeda">
+          <span class="prefixo">R$</span>
+          <input type="text" inputmode="numeric" autocomplete="off" placeholder="4.500" id="inRenda" data-moeda>
+        </label>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="renda">Continuar</button>
+      </section>
+
+      <!-- 1. ALUGUEL -->
+      <section class="tela" data-tela="aluguel" data-etapa>
+        <p class="kicker">Vamos come&#xe7;ar pelo seu cen&#xe1;rio atual</p>
+        <h2 class="pergunta">Quanto voc&#xea; paga de aluguel hoje?</h2>
+        <label class="campo-moeda">
+          <span class="prefixo">R$</span>
+          <input type="text" inputmode="numeric" autocomplete="off" placeholder="1.200" id="inAluguel" data-moeda>
+        </label>
+        <p class="dica-viva" id="dicaAluguel" aria-live="polite"></p>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="aluguel">Continuar</button>
+      </section>
+
+      <!-- 2. TEMPO -->
+      <section class="tela" data-tela="tempo" data-etapa>
+        <p class="kicker">Agora, o tempo</p>
+        <h2 class="pergunta">H&#xe1; quanto tempo voc&#xea; paga aluguel?</h2>
+        <div class="opcoes opcoes-grade" data-grupo="tempoFaixa">
+          <button type="button" class="opcao" data-valor="menos-1">Menos de 1 ano</button>
+          <button type="button" class="opcao" data-valor="1-2">1 a 2 anos</button>
+          <button type="button" class="opcao" data-valor="3-5">3 a 5 anos</button>
+          <button type="button" class="opcao" data-valor="6-10">6 a 10 anos</button>
+          <button type="button" class="opcao opcao-larga" data-valor="mais-10">Mais de 10 anos</button>
+        </div>
+        <div class="tempo-exato">
+          <p class="tempo-exato-titulo">Sabe o tempo certinho? <span>(opcional, deixa a conta mais precisa)</span></p>
+          <div class="tempo-campos">
+            <label class="campo-numero">
+              <input type="number" inputmode="numeric" min="0" max="60" placeholder="0" id="inAnos">
+              <span>anos</span>
+            </label>
+            <label class="campo-numero">
+              <input type="number" inputmode="numeric" min="0" max="11" placeholder="0" id="inMeses">
+              <span>meses</span>
+            </label>
+          </div>
+        </div>
+        <p class="dica-viva" id="dicaTempo" aria-live="polite"></p>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="tempo">Ver quanto isso representa</button>
+      </section>
+
+      <!-- REVELA&#xc7;&#xc3;O: PASSADO -->
+      <section class="tela tela-revelacao" data-tela="passado">
+        <p class="kicker kicker-claro">At&#xe9; hoje</p>
+        <h2 class="titulo-revelacao">Voc&#xea; j&#xe1; destinou aproximadamente</h2>
+        <div class="numero-gigante" id="numPassado">R$ 0</div>
+        <p class="revelacao-detalhe" id="detalhePassado"></p>
+        <div class="grafico-meses" id="graficoMeses" aria-hidden="true"></div>
+        <p class="nota-estimativa">Estimativa. A conta usa o valor de aluguel informado hoje e n&#xe3;o considera reajustes ao longo dos anos.</p>
+        <button class="btn-principal btn-claro" type="button" data-acao="ir" data-destino="futuro">E se eu continuar no aluguel?</button>
+      </section>
+
+      <!-- REVELA&#xc7;&#xc3;O: FUTURO -->
+      <section class="tela" data-tela="futuro">
+        <p class="kicker">Olhando para frente</p>
+        <h2 class="pergunta">E se voc&#xea; continuar pagando aluguel?</h2>
+        <div class="abas-horizonte" id="abasHorizonte" role="tablist"></div>
+        <div class="futuro-destaque">
+          <span class="futuro-rotulo" id="futuroRotulo">Em 10 anos</span>
+          <div class="numero-grande" id="numFuturo">R$ 0</div>
+          <span class="futuro-sub">poder&#xe3;o ir para o aluguel</span>
+        </div>
+        <div class="barras-futuro" id="barrasFuturo"></div>
+        <p class="nota-estimativa">Proje&#xe7;&#xe3;o simples com o aluguel de hoje. N&#xe3;o considera reajustes futuros.</p>
+        <div class="reflexao">
+          <p>Agora imagine se parte desse dinheiro fosse direcionada para um im&#xf3;vel pr&#xf3;prio.</p>
+        </div>
+        <button class="btn-principal" type="button" data-acao="ir" data-destino="entrada">Ver meu cen&#xe1;rio de financiamento</button>
+      </section>
+
+      <!-- 3. ENTRADA -->
+      <section class="tela" data-tela="entrada" data-etapa>
+        <p class="kicker">Seu cen&#xe1;rio de financiamento</p>
+        <h2 class="pergunta">Voc&#xea; j&#xe1; tem algum valor para dar de entrada?</h2>
+        <div class="opcoes" data-grupo="entradaResposta">
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+          <button type="button" class="opcao" data-valor="nao">N&#xe3;o</button>
+          <button type="button" class="opcao" data-valor="nao-sei">Ainda n&#xe3;o sei</button>
+        </div>
+        <div class="revela" id="revelaEntrada" hidden>
+          <p class="revela-titulo">Quanto voc&#xea; tem dispon&#xed;vel para entrada?</p>
+          <label class="campo-moeda">
+            <span class="prefixo">R$</span>
+            <input type="text" inputmode="numeric" autocomplete="off" placeholder="10.000" id="inEntrada" data-moeda>
+          </label>
+        </div>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="entrada">Continuar</button>
+      </section>
+
+      <!-- 4. FGTS -->
+      <section class="tela" data-tela="fgts" data-etapa>
+        <p class="kicker">O FGTS pode ajudar</p>
+        <h2 class="pergunta">Voc&#xea; tem FGTS?</h2>
+        <div class="opcoes" data-grupo="fgtsResposta">
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+          <button type="button" class="opcao" data-valor="nao">N&#xe3;o</button>
+          <button type="button" class="opcao" data-valor="nao-sei">N&#xe3;o sei</button>
+        </div>
+        <div class="revela" id="revelaFgts" hidden>
+          <p class="revela-titulo">Sabe mais ou menos quanto tem? <span>(opcional)</span></p>
+          <label class="campo-moeda">
+            <span class="prefixo">R$</span>
+            <input type="text" inputmode="numeric" autocomplete="off" placeholder="Pode deixar em branco" id="inFgts" data-moeda>
+          </label>
+        </div>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="fgts">Continuar</button>
+      </section>
+
+      <!-- 5. FAM&#xcd;LIA -->
+      <section class="tela" data-tela="familia" data-etapa>
+        <p class="kicker">Sobre sua fam&#xed;lia</p>
+        <h2 class="pergunta">Quantas pessoas fazem parte da sua fam&#xed;lia?</h2>
+        <div class="opcoes opcoes-numeros" data-grupo="pessoas" data-avanca>
+          <button type="button" class="opcao" data-valor="1">1</button>
+          <button type="button" class="opcao" data-valor="2">2</button>
+          <button type="button" class="opcao" data-valor="3">3</button>
+          <button type="button" class="opcao" data-valor="4">4</button>
+          <button type="button" class="opcao" data-valor="5">5+</button>
+        </div>
+      </section>
+
+      <!-- 6. IM&#xd3;VEL -->
+      <section class="tela" data-tela="imovel" data-etapa>
+        <p class="kicker">Quase l&#xe1;</p>
+        <h2 class="pergunta">Voc&#xea; j&#xe1; tem algum im&#xf3;vel no seu nome?</h2>
+        <div class="opcoes" data-grupo="possuiImovel" data-avanca>
+          <button type="button" class="opcao" data-valor="nao">N&#xe3;o</button>
+          <button type="button" class="opcao" data-valor="sim">Sim</button>
+        </div>
+      </section>
+
+      <!-- J&#xc1; TENTOU FINANCIAR -->
+      <section class="tela" data-tela="jaFinanciou" data-etapa>
+        <p class="kicker">Sua experi&#xea;ncia</p>
+        <h2 class="pergunta">Voc&#xea; j&#xe1; tentou financiar um im&#xf3;vel antes?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="jaFinanciou" data-avanca>
+          <button type="button" class="opcao" data-valor="nunca">Nunca tentei</button>
+          <button type="button" class="opcao" data-valor="nao-consegui">Tentei, mas n&#xe3;o consegui</button>
+          <button type="button" class="opcao" data-valor="tem-simulacao">J&#xe1; tenho uma simula&#xe7;&#xe3;o no banco</button>
+        </div>
+      </section>
+
+      <!-- OBJETIVO -->
+      <section class="tela" data-tela="objetivo" data-etapa>
+        <p class="kicker">Seu objetivo</p>
+        <h2 class="pergunta">O que voc&#xea; busca hoje?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="objetivo" data-avanca>
+          <button type="button" class="opcao" data-valor="sair-aluguel">Quero sair do aluguel</button>
+          <button type="button" class="opcao" data-valor="primeiro-imovel">Quero comprar meu primeiro im&#xf3;vel</button>
+          <button type="button" class="opcao" data-valor="entender-financiamento">Quero entender se consigo financiar</button>
+          <button type="button" class="opcao" data-valor="pesquisando">Ainda estou pesquisando</button>
+        </div>
+      </section>
+
+      <!-- MOMENTO DE COMPRA -->
+      <section class="tela" data-tela="momento" data-etapa>
+        <p class="kicker">Sua busca</p>
+        <h2 class="pergunta">Em que momento voc&#xea; est&#xe1;?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="momento" data-avanca>
+          <button type="button" class="opcao" data-valor="comecando">S&#xf3; comecei a pesquisar</button>
+          <button type="button" class="opcao" data-valor="viu-internet">J&#xe1; vi im&#xf3;veis na internet</button>
+          <button type="button" class="opcao" data-valor="visitou">J&#xe1; visitei im&#xf3;veis</button>
+          <button type="button" class="opcao" data-valor="imovel-em-vista">J&#xe1; tenho um im&#xf3;vel em vista</button>
+        </div>
+      </section>
+
+      <!-- PRAZO PARA DECIS&#xc3;O -->
+      <section class="tela" data-tela="prazo" data-etapa>
+        <p class="kicker">Seus planos</p>
+        <h2 class="pergunta">Em quanto tempo voc&#xea; quer tomar essa decis&#xe3;o?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="prazo" data-avanca>
+          <button type="button" class="opcao" data-valor="ate-3-meses">Nos pr&#xf3;ximos 3 meses</button>
+          <button type="button" class="opcao" data-valor="3-6-meses">De 3 a 6 meses</button>
+          <button type="button" class="opcao" data-valor="6-12-meses">De 6 meses a 1 ano</button>
+          <button type="button" class="opcao" data-valor="mais-1-ano">Mais de 1 ano</button>
+          <button type="button" class="opcao" data-valor="nao-sei">Ainda n&#xe3;o sei</button>
+        </div>
+      </section>
+
+      <!-- PRONTO PARA SEGUIR -->
+      <section class="tela" data-tela="pronto" data-etapa>
+        <p class="kicker">&#xda;ltima pergunta</p>
+        <h2 class="pergunta">Se encontrarmos um im&#xf3;vel que caiba no seu bolso, voc&#xea; est&#xe1; pronto para seguir?</h2>
+        <div class="opcoes opcoes-lista" data-grupo="pronto" data-avanca>
+          <button type="button" class="opcao" data-valor="quer-avancar">Sim, quero avan&#xe7;ar</button>
+          <button type="button" class="opcao" data-valor="conversar-familia">Preciso conversar com a fam&#xed;lia</button>
+          <button type="button" class="opcao" data-valor="so-entender">Por enquanto s&#xf3; quero entender</button>
+        </div>
+      </section>
+
+      <!-- CALCULANDO -->
+      <section class="tela tela-calculando" data-tela="calculando">
+        <div class="loader" aria-hidden="true"><span></span></div>
+        <h2 class="pergunta">Montando seu diagn&#xf3;stico</h2>
+        <ul class="checklist" id="checklist">
+          <li>Somando o hist&#xf3;rico de aluguel</li>
+          <li>Projetando os pr&#xf3;ximos anos</li>
+          <li>Considerando renda, entrada e FGTS</li>
+          <li>Estimando sua faixa de financiamento</li>
+        </ul>
+      </section>
+
+      <!-- RESULTADO -->
+      <section class="tela tela-resultado" data-tela="resultado">
+
+        <div class="res-cabecalho">
+          <span class="selo-estimativa">Estimativa</span>
+          <h1 class="titulo-grande" id="resTitulo">Seu diagn&#xf3;stico</h1>
+          <p class="subtitulo">Estimativa baseada nas informa&#xe7;&#xf5;es fornecidas.</p>
+        </div>
+
+        <!-- At&#xe9; hoje &#x2192; Pr&#xf3;ximo passo -->
+        <div class="linha-tempo">
+          <div class="lt-bloco lt-passado">
+            <span class="lt-rotulo">At&#xe9; hoje</span>
+            <p>Voc&#xea; j&#xe1; destinou aproximadamente</p>
+            <strong id="resPassado">R$ 0</strong>
+            <p>ao aluguel.</p>
+          </div>
+          <div class="lt-seta" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="28" height="28"><path d="M12 4v16m0 0l-6-6m6 6l6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="lt-bloco lt-proximo">
+            <span class="lt-rotulo">Pr&#xf3;ximo passo</span>
+            <p id="resProximoTexto">Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.</p>
+          </div>
+        </div>
+
+        <!-- Dois cen&#xe1;rios -->
+        <div class="cenarios">
+          <article class="card cenario cenario-atual">
+            <header>
+              <span class="cenario-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M4 11l8-6 8 6v9H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 20v-5h6v5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              </span>
+              <h3>Seu cen&#xe1;rio atual</h3>
+            </header>
+            <dl class="dados" id="dadosAtual"></dl>
+          </article>
+
+          <article class="card cenario cenario-financiamento">
+            <header>
+              <span class="cenario-icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20"><path d="M3 21h18M5 21V10l7-5 7 5v11" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 14h4v7h-4z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              </span>
+              <h3>Possibilidade de financiamento</h3>
+              <span class="tag-estimativa">Estimativa</span>
+            </header>
+            <dl class="dados" id="dadosFinanciamento"></dl>
+            <div class="composicao" id="composicao"></div>
+            <p class="nota-card">A aprova&#xe7;&#xe3;o e as condi&#xe7;&#xf5;es finais dependem da an&#xe1;lise de cr&#xe9;dito e das regras aplic&#xe1;veis ao financiamento.</p>
+          </article>
+        </div>
+
+        <!-- Mensagem personalizada -->
+        <div class="card mensagem" id="mensagem">
+          <span class="mensagem-icone" aria-hidden="true"></span>
+          <div>
+            <h3 id="mensagemTitulo"></h3>
+            <p id="mensagemTexto"></p>
+          </div>
+        </div>
+
+        <!-- Longo prazo -->
+        <div class="card">
+          <h3 class="card-titulo">Quanto o aluguel pode representar ao longo do tempo?</h3>
+          <div class="barras-longo" id="barrasLongo"></div>
+          <p class="nota-estimativa">Esses valores s&#xe3;o uma proje&#xe7;&#xe3;o simples baseada no aluguel informado hoje e n&#xe3;o consideram reajustes.</p>
+        </div>
+
+        <!-- O que influencia -->
+        <div class="card">
+          <h3 class="card-titulo">O que influencia o seu financiamento</h3>
+          <ul class="fatores" id="fatores"></ul>
+        </div>
+
+        <!-- CTA final -->
+        <div class="cta-final">
+          <h2>Quer entender quais im&#xf3;veis podem fazer sentido para o seu cen&#xe1;rio?</h2>
+          <p>Agora que voc&#xea; j&#xe1; conhece uma estimativa do seu cen&#xe1;rio, um especialista pode analisar suas informa&#xe7;&#xf5;es e apresentar op&#xe7;&#xf5;es compat&#xed;veis com o seu perfil.</p>
+          <button class="btn-principal btn-cta" type="button" data-acao="cta">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 00-8.6 15.1L2 22l5-1.3A10 10 0 1012 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1112 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 01-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 00-.7.3 3 3 0 00-.9 2.2 5.2 5.2 0 001.1 2.7 11.8 11.8 0 004.5 4c1.7.7 2.3.8 3.2.6a2.7 2.7 0 001.8-1.2 2.2 2.2 0 00.1-1.2c0-.1-.2-.2-.5-.3z"/></svg>
+            Quero falar com um especialista
+          </button>
+          <p class="cta-feedback" id="ctaFeedback" aria-live="polite"></p>
+        </div>
+
+        <p class="aviso-legal">
+          Esta ferramenta mostra uma estimativa baseada nas informa&#xe7;&#xf5;es fornecidas e em par&#xe2;metros de refer&#xea;ncia. Ela n&#xe3;o representa proposta, pr&#xe9;-aprova&#xe7;&#xe3;o ou garantia de cr&#xe9;dito. A aprova&#xe7;&#xe3;o e as condi&#xe7;&#xf5;es finais dependem da an&#xe1;lise de cr&#xe9;dito e das regras aplic&#xe1;veis ao financiamento.
+        </p>
+
+        <button class="btn-texto" type="button" data-acao="refazer">Refazer simula&#xe7;&#xe3;o</button>
+      </section>
+
+    </main>
+  </div>
+</div>
+<script>
+/* ==========================================================================
+   CONFIGURA\u00c7\u00c3O CENTRAL DA CALCULADORA
+   --------------------------------------------------------------------------
+   Todas as regras de c\u00e1lculo ficam aqui. Para mudar taxa, prazo, faixas de
+   renda, subs\u00eddio, teto do im\u00f3vel, integra\u00e7\u00e3o com CRM ou textos do CTA,
+   altere somente este arquivo.
+
+   ATEN\u00c7\u00c3O: os valores abaixo s\u00e3o REFER\u00caNCIAS DE EXEMPLO para a ferramenta
+   funcionar. Eles N\u00c3O s\u00e3o a regra oficial do Minha Casa, Minha Vida.
+   Antes de publicar, confirme cada n\u00famero com o correspondente banc\u00e1rio
+   ou com as regras vigentes do programa.
+   ========================================================================== */
+
+window.CALC_CONFIG = {
+
+  /* ------------------------------------------------------------------
+     1. REGRAS DE FINANCIAMENTO
+     ------------------------------------------------------------------ */
+  financiamento: {
+    // Parte da renda que pode ir para a parcela (0.30 = 30%)
+    comprometimentoRenda: 0.30,
+
+    // Prazo em meses (420 = 35 anos)
+    prazoMeses: 420,
+
+    // 'PRICE' (parcelas iguais) ou 'SAC' (primeira parcela maior, depois cai)
+    sistemaAmortizacao: 'PRICE',
+
+    // Percentual m\u00e1ximo do im\u00f3vel que pode ser financiado (0.80 = 80%)
+    percentualFinanciavel: 0.80,
+
+    // Se true, o financiamento nunca passa do percentual acima.
+    // O restante aparece como entrada estimada (entrada + FGTS + subs\u00eddio
+    // e, se faltar, o valor a complementar).
+    aplicarLimitePercentualFinanciavel: true,
+
+    // Valor do im\u00f3vel mais barato que voc\u00eas oferecem (R$).
+    // A estimativa nunca mostra im\u00f3vel abaixo disso. Se a renda n\u00e3o chegar
+    // a esse valor, o resultado mostra quanto falta para alcan\u00e7\u00e1-lo.
+    valorMinimoImovel: 240000,
+
+    // Custo mensal estimado de seguros e taxas somado \u00e0 parcela (em R$).
+    // Deixe 0 para ignorar.
+    custosMensaisExtras: 0,
+
+    // Margem usada para mostrar o resultado como faixa (0.10 = \u00b110%)
+    margemFaixa: 0.10,
+
+    // Arredondamento dos valores exibidos na faixa (1000 = milhar)
+    arredondarPara: 1000,
+
+    // O programa costuma exigir que a fam\u00edlia n\u00e3o tenha im\u00f3vel pr\u00f3prio.
+    // Se true, quem tem im\u00f3vel recebe o aviso e fica sem subs\u00eddio na conta.
+    exigeNaoPossuirImovel: true,
+
+    /* Faixas de renda. Cada faixa define:
+       - nome: r\u00f3tulo interno (vai para o CRM)
+       - rendaMax: renda familiar bruta m\u00e1xima da faixa
+       - taxaJurosAnual: juros ao ano (0.05 = 5% a.a.)
+       - subsidioMax: subs\u00eddio m\u00e1ximo considerado na conta (R$)
+       - valorMaxImovel: teto do im\u00f3vel na faixa (R$)
+       VALORES DE EXEMPLO. AJUSTE ANTES DE USAR. */
+    faixas: [
+      { nome: 'Faixa 1', rendaMax: 2850,  taxaJurosAnual: 0.0450, subsidioMax: 55000, valorMaxImovel: 264000 },
+      { nome: 'Faixa 2', rendaMax: 4700,  taxaJurosAnual: 0.0600, subsidioMax: 30000, valorMaxImovel: 264000 },
+      { nome: 'Faixa 3', rendaMax: 8600,  taxaJurosAnual: 0.0766, subsidioMax: 0,     valorMaxImovel: 350000 },
+      { nome: 'Faixa 4', rendaMax: 12000, taxaJurosAnual: 0.1000, subsidioMax: 0,     valorMaxImovel: 500000 }
+    ],
+
+    /* Como o subs\u00eddio entra na conta.
+       'nenhum'       \u2192 ignora subs\u00eddio
+       'maximo'       \u2192 usa o subsidioMax da faixa
+       'proporcional' \u2192 quanto menor a renda dentro da faixa, maior o subs\u00eddio
+       Use 'nenhum' se preferir n\u00e3o sinalizar subs\u00eddio na estimativa. */
+    modoSubsidio: 'proporcional',
+
+    /* Ajuste opcional pela composi\u00e7\u00e3o familiar.
+       Multiplicador aplicado ao subs\u00eddio estimado conforme o n\u00famero de
+       pessoas. Deixe tudo 1 para n\u00e3o aplicar ajuste. */
+    ajusteSubsidioPorPessoas: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 }
+  },
+
+  /* ------------------------------------------------------------------
+     2. PROJE\u00c7\u00c3O DO ALUGUEL
+     ------------------------------------------------------------------ */
+  aluguel: {
+    // Horizontes da proje\u00e7\u00e3o futura (em anos)
+    horizontesAnos: [5, 10, 20],
+
+    // Meses usados quando a pessoa escolhe s\u00f3 a faixa de tempo
+    mesesPorFaixaTempo: {
+      'menos-1': 6,
+      '1-2': 18,
+      '3-5': 48,
+      '6-10': 96,
+      'mais-10': 144
+    }
+  },
+
+  /* ------------------------------------------------------------------
+     2.1 QUALIFICA\u00c7\u00c3O DO LEAD (s\u00f3 vai para o CRM, o cliente nunca v\u00ea)
+     Cada resposta soma pontos. A soma define a temperatura do lead.
+     ------------------------------------------------------------------ */
+  qualificacao: {
+    pontos: {
+      prazo: { 'ate-3-meses': 3, '3-6-meses': 2, '6-12-meses': 1, 'mais-1-ano': 0, 'nao-sei': 0 },
+      pronto: { 'quer-avancar': 3, 'conversar-familia': 1, 'so-entender': 0 },
+      momento: { 'imovel-em-vista': 3, 'visitou': 2, 'viu-internet': 1, 'comecando': 0 },
+      jaFinanciou: { 'tem-simulacao': 2, 'nunca': 1, 'nao-consegui': 1 },
+      // Ponto extra quando a simula\u00e7\u00e3o encontrou uma faixa de financiamento
+      estimativaEncontrada: 1
+    },
+    // Pontua\u00e7\u00e3o m\u00ednima para cada temperatura (m\u00e1ximo poss\u00edvel: 12)
+    quente: 9,
+    morno: 5
+  },
+
+  /* ------------------------------------------------------------------
+     3. DADOS VINDOS DA LANDING PAGE
+     A calculadora procura os dados nesta ordem:
+       a) par\u00e2metros da URL (ex.: ?nome=Ana&whatsapp=11999999999&renda=4500)
+       b) sessionStorage / localStorage com a chave abaixo (JSON)
+     ------------------------------------------------------------------ */
+  landingPage: {
+    parametrosUrl: {
+      nome: ['nome', 'name', 'first_name'],
+      whatsapp: ['whatsapp', 'telefone', 'phone', 'celular'],
+      renda: ['renda', 'renda_familiar', 'income']
+    },
+    chaveStorage: 'lp_lead',
+    // Par\u00e2metros de campanha repassados ao CRM
+    parametrosRastreio: ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'gclid', 'fbclid']
+  },
+
+  /* ------------------------------------------------------------------
+     4. INTEGRA\u00c7\u00c3O COM O CRM
+     ------------------------------------------------------------------ */
+  crm: {
+    // URL que recebe o POST com o JSON do lead (webhook do CRM, Zapier,
+    // Make, n8n etc). Deixe '' para n\u00e3o enviar.
+    webhookUrl: '',
+
+    // Cabe\u00e7alhos extras (ex.: token do CRM)
+    headers: {},
+
+    // Se o navegador bloquear o envio em JSON (CORS), manda de novo como
+    // formul\u00e1rio simples, s\u00f3 com os campos planos. Deixe true no GoHighLevel.
+    reenviarComoFormularioSeBloquear: true,
+
+    // DDI adicionado ao WhatsApp no campo "telefone" (formato +5511999999999)
+    ddiPadrao: '55',
+
+    // Envia os dados assim que o resultado aparece (garante o lead mesmo
+    // que a pessoa n\u00e3o clique no CTA). O clique no CTA envia de novo com
+    // o evento "cta_especialista".
+    enviarAoVerResultado: true,
+
+    // Tamb\u00e9m publica os eventos no dataLayer (Google Tag Manager)
+    usarDataLayer: true
+  },
+
+  /* ------------------------------------------------------------------
+     5. CTA FINAL
+     ------------------------------------------------------------------ */
+  ctaFinal: {
+    // 'whatsapp' abre conversa com o especialista j\u00e1 com o resumo
+    // 'url' redireciona para outra p\u00e1gina (agenda, obrigado etc)
+    tipo: 'whatsapp',
+    whatsappNumero: '5500000000000', // DDI + DDD + n\u00famero, s\u00f3 d\u00edgitos
+    url: '',
+    abrirEmNovaAba: true
+  },
+
+  /* ------------------------------------------------------------------
+     6. MARCA
+     ------------------------------------------------------------------ */
+  marca: {
+    nome: 'Sua Imobili\u00e1ria',
+    logoUrl: '' // opcional
+  }
+};
+
+/* ==========================================================================
+   C\u00c1LCULOS
+   Fun\u00e7\u00f5es puras: recebem dados + configura\u00e7\u00e3o e devolvem n\u00fameros.
+   Nenhuma regra fixa mora aqui. Tudo vem de CALC_CONFIG (js/config.js).
+   ========================================================================== */
+
+window.Calculos = (function () {
+
+  /* ---------- Aluguel ---------- */
+
+  // Meses totais pagando aluguel.
+  // Se a pessoa informou anos/meses exatos, usa isso. Sen\u00e3o usa a faixa escolhida.
+  function mesesDeAluguel(tempo, cfg) {
+    const anos = Number(tempo.anos) || 0;
+    const meses = Number(tempo.meses) || 0;
+    const exato = anos * 12 + meses;
+    if (exato > 0) return { meses: exato, origem: 'informado' };
+    if (tempo.faixa && cfg.aluguel.mesesPorFaixaTempo[tempo.faixa]) {
+      return { meses: cfg.aluguel.mesesPorFaixaTempo[tempo.faixa], origem: 'faixa' };
+    }
+    return { meses: 0, origem: 'nao-informado' };
+  }
+
+  // Aluguel mensal \u00d7 meses (sem reajustes)
+  function totalAluguel(aluguelMensal, meses) {
+    return (Number(aluguelMensal) || 0) * (Number(meses) || 0);
+  }
+
+  function projecaoAluguel(aluguelMensal, cfg) {
+    return cfg.aluguel.horizontesAnos.map(function (anos) {
+      return { anos: anos, valor: totalAluguel(aluguelMensal, anos * 12) };
+    });
+  }
+
+  /* ---------- Matem\u00e1tica financeira ---------- */
+
+  function taxaMensal(taxaAnual) {
+    return Math.pow(1 + taxaAnual, 1 / 12) - 1;
+  }
+
+  // Quanto d\u00e1 para financiar com uma parcela m\u00e1xima
+  function valorFinanciavelPelaParcela(parcela, i, n, sistema) {
+    if (parcela <= 0 || n <= 0) return 0;
+    if (i === 0) return parcela * n;
+    if (sistema === 'SAC') {
+      // 1\u00aa parcela SAC = F/n + F*i  \u2192  F = P / (1/n + i)
+      return parcela / (1 / n + i);
+    }
+    // PRICE: valor presente de uma s\u00e9rie de parcelas iguais
+    return parcela * (1 - Math.pow(1 + i, -n)) / i;
+  }
+
+  // Parcela (a primeira, no caso SAC) para um valor financiado
+  function parcelaDoFinanciamento(valor, i, n, sistema) {
+    if (valor <= 0 || n <= 0) return 0;
+    if (i === 0) return valor / n;
+    if (sistema === 'SAC') return valor / n + valor * i;
+    return valor * i / (1 - Math.pow(1 + i, -n));
+  }
+
+  /* ---------- Faixa de renda e subs\u00eddio ---------- */
+
+  function encontrarFaixa(renda, faixas) {
+    for (let k = 0; k < faixas.length; k++) {
+      if (renda <= faixas[k].rendaMax) {
+        return { faixa: faixas[k], rendaMin: k === 0 ? 0 : faixas[k - 1].rendaMax, indice: k };
+      }
+    }
+    return null;
+  }
+
+  function estimarSubsidio(renda, achado, pessoas, possuiImovel, fin) {
+    if (!achado || fin.modoSubsidio === 'nenhum') return 0;
+    if (possuiImovel && fin.exigeNaoPossuirImovel) return 0;
+    const max = achado.faixa.subsidioMax || 0;
+    if (max <= 0) return 0;
+
+    let valor = max;
+    if (fin.modoSubsidio === 'proporcional') {
+      const largura = achado.faixa.rendaMax - achado.rendaMin;
+      const posicao = largura > 0 ? (achado.faixa.rendaMax - renda) / largura : 1;
+      valor = max * Math.min(1, Math.max(0, posicao));
+    }
+    const ajuste = fin.ajusteSubsidioPorPessoas[Math.min(5, pessoas || 1)];
+    return valor * (ajuste == null ? 1 : ajuste);
+  }
+
+  /* ---------- Faixa de exibi\u00e7\u00e3o ---------- */
+
+  function faixaDeValor(valor, fin, teto, piso) {
+    if (!valor || valor <= 0) return null;
+    const r = fin.arredondarPara || 1;
+    let min = Math.floor((valor * (1 - fin.margemFaixa)) / r) * r;
+    let max = Math.ceil((valor * (1 + fin.margemFaixa)) / r) * r;
+    if (teto) max = Math.min(max, teto);
+    if (piso) min = Math.max(min, piso);
+    if (min > max) min = max;
+    return { min: min, max: max, central: valor };
+  }
+
+  /* ---------- Estimativa principal ---------- */
+
+  /*
+    dados = {
+      renda, entrada, fgts, pessoas, possuiImovel
+    }
+    Retorna todos os n\u00fameros usados, para exibir e para mandar ao CRM.
+  */
+  function estimarFinanciamento(dados, cfg) {
+    const fin = cfg.financiamento;
+    const renda = Number(dados.renda) || 0;
+    const entrada = Number(dados.entrada) || 0;
+    const fgts = Number(dados.fgts) || 0;
+
+    const base = {
+      renda: renda,
+      entrada: entrada,
+      fgts: fgts,
+      prazoMeses: fin.prazoMeses,
+      sistemaAmortizacao: fin.sistemaAmortizacao,
+      comprometimentoRenda: fin.comprometimentoRenda,
+      percentualFinanciavel: fin.percentualFinanciavel
+    };
+
+    if (renda <= 0) {
+      return Object.assign(base, { status: 'sem-renda' });
+    }
+
+    const achado = encontrarFaixa(renda, fin.faixas);
+    if (!achado) {
+      return Object.assign(base, { status: 'fora-das-faixas' });
+    }
+
+    const faixa = achado.faixa;
+    const i = taxaMensal(faixa.taxaJurosAnual);
+    const n = fin.prazoMeses;
+    const parcelaMax = Math.max(0, renda * fin.comprometimentoRenda - (fin.custosMensaisExtras || 0));
+    const capacidadePelaRenda = valorFinanciavelPelaParcela(parcelaMax, i, n, fin.sistemaAmortizacao);
+
+    const subsidio = estimarSubsidio(renda, achado, dados.pessoas, dados.possuiImovel, fin);
+    const recursos = entrada + fgts + subsidio;
+
+    // Quanto a renda + recursos permitem comprar, respeitando o teto da faixa
+    const podeComprar = capacidadePelaRenda + recursos;
+    const teto = faixa.valorMaxImovel || Infinity;
+    const valorImovel = Math.min(podeComprar, teto);
+    const fatorLimitante = podeComprar > teto ? 'teto' : 'renda';
+
+    // Im\u00f3veis abaixo do valor m\u00ednimo n\u00e3o existem no mercado atendido.
+    // Se a estimativa ficar abaixo, a conta \u00e9 feita para o im\u00f3vel m\u00ednimo.
+    const minimo = fin.valorMinimoImovel || 0;
+    const status = valorImovel >= minimo ? 'estimado' : 'abaixo-do-minimo';
+    const imovelReferencia = Math.max(valorImovel, minimo);
+
+    // O financiamento n\u00e3o passa da capacidade da renda nem do percentual financi\u00e1vel
+    const limitePercentual = fin.aplicarLimitePercentualFinanciavel
+      ? imovelReferencia * fin.percentualFinanciavel
+      : imovelReferencia;
+    const financiamento = Math.max(0, Math.min(capacidadePelaRenda, limitePercentual, imovelReferencia - recursos));
+
+    // O que o financiamento n\u00e3o cobre precisa vir de entrada, FGTS ou subs\u00eddio
+    const entradaNecessaria = imovelReferencia - financiamento;
+    const complementoEntrada = Math.max(0, entradaNecessaria - recursos);
+
+    const parcelaEstimada = parcelaDoFinanciamento(financiamento, i, n, fin.sistemaAmortizacao)
+      + (financiamento > 0 ? (fin.custosMensaisExtras || 0) : 0);
+
+    return Object.assign(base, {
+      status: status,
+      faixaPrograma: faixa.nome,
+      taxaJurosAnual: faixa.taxaJurosAnual,
+      taxaJurosMensal: i,
+      parcelaMaxima: parcelaMax,
+      capacidadePelaRenda: capacidadePelaRenda,
+      subsidioEstimado: subsidio,
+      recursosProprios: entrada + fgts,
+      recursosTotais: recursos,
+      valorMinimoImovel: minimo,
+      imovelReferencia: imovelReferencia,
+      financiamento: financiamento,
+      valorImovel: status === 'estimado' ? valorImovel : 0,
+      entradaNecessaria: entradaNecessaria,
+      complementoEntrada: complementoEntrada,
+      parcelaEstimada: parcelaEstimada,
+      fatorLimitante: fatorLimitante,
+      faixaFinanciamento: faixaDeValor(financiamento, fin),
+      faixaImovel: status === 'estimado' ? faixaDeValor(valorImovel, fin, teto, minimo) : null
+    });
+  }
+
+  function reais(v) {
+    return 'R$ ' + Math.round(v || 0).toLocaleString('pt-BR');
+  }
+
+  /* ---------- Mensagem personalizada ---------- */
+
+  /*
+    Mensagem orientativa. Nunca diz "aprovado" ou "reprovado".
+    Tamb\u00e9m devolve um indicador interno (s\u00f3 para o CRM) que ajuda o corretor
+    a priorizar o contato.
+  */
+  function diagnostico(estimativa, respostas, cfg) {
+    const fin = cfg.financiamento;
+    const pendencias = [];
+    if (respostas.entradaResposta === 'nao-sei') pendencias.push('valor de entrada');
+    if (respostas.fgtsResposta === 'nao-sei' || (respostas.fgtsResposta === 'sim' && !respostas.fgtsValor)) pendencias.push('saldo de FGTS');
+
+    let titulo, texto, tom, indicadorInterno;
+
+    if (respostas.possuiImovel && fin.exigeNaoPossuirImovel) {
+      tom = 'atencao';
+      titulo = 'Seu cen\u00e1rio precisa de uma an\u00e1lise mais detalhada';
+      texto = 'Voc\u00ea informou que j\u00e1 tem um im\u00f3vel no seu nome. Isso muda as regras que podem valer para voc\u00ea. Um especialista pode verificar quais caminhos fazem sentido no seu caso.';
+      indicadorInterno = 'analisar-imovel-existente';
+    } else if (estimativa.status === 'fora-das-faixas') {
+      tom = 'atencao';
+      titulo = 'Seu cen\u00e1rio pede uma an\u00e1lise personalizada';
+      texto = 'A renda informada ficou acima dos limites considerados nesta simula\u00e7\u00e3o. Existem outras linhas de financiamento, e um especialista pode mostrar quais combinam com o seu perfil.';
+      indicadorInterno = 'renda-acima-faixas';
+    } else if (estimativa.status === 'abaixo-do-minimo') {
+      tom = 'atencao';
+      titulo = 'Seu cen\u00e1rio ainda precisa de uma an\u00e1lise mais detalhada';
+      texto = 'Com a renda informada, a estimativa ficou abaixo do valor dos im\u00f3veis dispon\u00edveis, que come\u00e7am em ' +
+        reais(estimativa.valorMinimoImovel) + '. Juntar a renda com outra pessoa, usar o FGTS ou contar com subs\u00eddio pode mudar esse cen\u00e1rio. Um especialista pode mostrar os caminhos poss\u00edveis.';
+      indicadorInterno = 'abaixo-do-minimo';
+    } else if (estimativa.status === 'estimado') {
+      tom = 'positivo';
+      titulo = 'Seu cen\u00e1rio indica que vale a pena analisar suas possibilidades de financiamento';
+      texto = 'Com base nas informa\u00e7\u00f5es que voc\u00ea passou, existe uma estimativa de faixa de financiamento para o seu perfil. O pr\u00f3ximo passo \u00e9 conferir isso com uma an\u00e1lise de verdade.';
+      indicadorInterno = estimativa.complementoEntrada > 0 ? 'estimado-com-entrada-a-complementar' : 'estimado';
+    } else {
+      tom = 'atencao';
+      titulo = 'Vamos completar o seu diagn\u00f3stico';
+      texto = 'Faltaram algumas informa\u00e7\u00f5es para montar a estimativa. Um especialista pode completar essa an\u00e1lise com voc\u00ea.';
+      indicadorInterno = 'dados-insuficientes';
+    }
+
+    if (indicadorInterno === 'estimado-com-entrada-a-complementar') {
+      texto += ' Para esse valor de im\u00f3vel, a entrada estimada fica em torno de ' + reais(estimativa.entradaNecessaria) +
+        '. Em muitos empreendimentos essa diferen\u00e7a pode ser parcelada, e o especialista confirma as condi\u00e7\u00f5es.';
+    }
+
+    if (pendencias.length && estimativa.status === 'estimado') {
+      texto += ' Como voc\u00ea ainda n\u00e3o sabe o ' + pendencias.join(' e o ') + ', esse n\u00famero pode mudar depois de conferido.';
+    }
+
+    return { titulo: titulo, texto: texto, tom: tom, indicadorInterno: indicadorInterno, pendencias: pendencias };
+  }
+
+  /* ---------- Temperatura do lead (s\u00f3 para o CRM) ---------- */
+
+  function temperaturaLead(respostas, estimativa, cfg) {
+    const q = cfg.qualificacao;
+    let pontos = 0;
+    ['prazo', 'pronto', 'momento', 'jaFinanciou'].forEach(function (campo) {
+      const tabela = q.pontos[campo] || {};
+      pontos += tabela[respostas[campo]] || 0;
+    });
+    if (estimativa && estimativa.status === 'estimado') pontos += q.pontos.estimativaEncontrada || 0;
+
+    const nivel = pontos >= q.quente ? 'quente' : (pontos >= q.morno ? 'morno' : 'frio');
+    return { nivel: nivel, pontos: pontos };
+  }
+
+  return {
+    temperaturaLead: temperaturaLead,
+    mesesDeAluguel: mesesDeAluguel,
+    totalAluguel: totalAluguel,
+    projecaoAluguel: projecaoAluguel,
+    taxaMensal: taxaMensal,
+    valorFinanciavelPelaParcela: valorFinanciavelPelaParcela,
+    parcelaDoFinanciamento: parcelaDoFinanciamento,
+    encontrarFaixa: encontrarFaixa,
+    estimarFinanciamento: estimarFinanciamento,
+    diagnostico: diagnostico
+  };
+})();
+
+/* ==========================================================================
+   CRM
+   Monta o JSON do lead, o resumo para o corretor e faz o envio.
+   ========================================================================== */
+
+window.CRM = (function () {
+
+  const ROTULOS = {
+    tempoFaixa: {
+      'menos-1': 'Menos de 1 ano', '1-2': '1 a 2 anos', '3-5': '3 a 5 anos',
+      '6-10': '6 a 10 anos', 'mais-10': 'Mais de 10 anos'
+    },
+    simNao: { sim: 'Sim', nao: 'N\u00e3o', 'nao-sei': 'N\u00e3o sabe' },
+    objetivo: {
+      'sair-aluguel': 'Sair do aluguel',
+      'primeiro-imovel': 'Comprar primeiro im\u00f3vel',
+      'entender-financiamento': 'Entender se consegue financiar',
+      'pesquisando': 'Ainda pesquisando'
+    },
+    jaFinanciou: {
+      'nunca': 'Nunca tentou',
+      'nao-consegui': 'Tentou, mas n\u00e3o conseguiu',
+      'tem-simulacao': 'J\u00e1 tem simula\u00e7\u00e3o no banco'
+    },
+    momento: {
+      'comecando': 'Come\u00e7ou a pesquisar agora',
+      'viu-internet': 'J\u00e1 viu im\u00f3veis na internet',
+      'visitou': 'J\u00e1 visitou im\u00f3veis',
+      'imovel-em-vista': 'J\u00e1 tem um im\u00f3vel em vista'
+    },
+    prazo: {
+      'ate-3-meses': 'Nos pr\u00f3ximos 3 meses',
+      '3-6-meses': 'De 3 a 6 meses',
+      '6-12-meses': 'De 6 meses a 1 ano',
+      'mais-1-ano': 'Mais de 1 ano',
+      'nao-sei': 'Ainda n\u00e3o sabe'
+    },
+    pronto: {
+      'quer-avancar': 'Sim, quer avan\u00e7ar',
+      'conversar-familia': 'Precisa conversar com a fam\u00edlia',
+      'so-entender': 'Por enquanto s\u00f3 quer entender'
+    },
+    temperatura: { quente: 'QUENTE', morno: 'MORNO', frio: 'FRIO' }
+  };
+
+  function brl(v) {
+    if (v == null || isNaN(v)) return null;
+    return 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+  }
+
+  function textoTempo(meses) {
+    if (!meses) return 'N\u00e3o informado';
+    const a = Math.floor(meses / 12);
+    const m = meses % 12;
+    const partes = [];
+    if (a) partes.push(a + (a === 1 ? ' ano' : ' anos'));
+    if (m) partes.push(m + (m === 1 ? ' m\u00eas' : ' meses'));
+    return partes.join(' e ');
+  }
+
+  function textoFaixa(f) {
+    if (!f) return null;
+    return brl(f.min) + ' a ' + brl(f.max);
+  }
+
+  /* ---------- Payload estruturado ---------- */
+
+  function montarPayload(estado, evento) {
+    const r = estado.respostas;
+    const est = estado.estimativa || {};
+    const tempo = estado.tempoCalculado || {};
+    const proj = estado.projecao || [];
+    const porAnos = {};
+    proj.forEach(function (p) { porAnos[p.anos] = Math.round(p.valor); });
+
+    return {
+      evento: evento,
+      dataHora: new Date().toISOString(),
+      origem: {
+        ferramenta: 'calculadora-aluguel-x-financiamento-mcmv',
+        pagina: location.href,
+        rastreio: estado.rastreio || {}
+      },
+
+      dadosPessoais: {
+        nome: estado.lead.nome || null,
+        whatsapp: estado.lead.whatsapp || null,
+        rendaFamiliar: estado.lead.renda || null,
+        rendaInformadaNaCalculadora: !!estado.lead.rendaPerguntadaAqui
+      },
+
+      dadosFinanceiros: {
+        aluguelMensal: r.aluguel || null,
+        tempoAluguelFaixa: r.tempoFaixa || null,
+        tempoAluguelAnosInformados: r.anos || null,
+        tempoAluguelMesesInformados: r.meses || null,
+        tempoAluguelTotalMeses: tempo.meses || null,
+        tempoAluguelOrigem: tempo.origem || null, // 'informado' ou 'faixa'
+        valorEstimadoPagoAluguel: estado.totalPago != null ? Math.round(estado.totalPago) : null,
+        possuiEntrada: r.entradaResposta || null,
+        valorEntrada: r.entradaResposta === 'sim' ? (r.entradaValor || null) : null,
+        possuiFgts: r.fgtsResposta || null,
+        valorFgtsAproximado: r.fgtsResposta === 'sim' ? (r.fgtsValor || null) : null
+      },
+
+      perfil: {
+        pessoasNaFamilia: r.pessoas || null,
+        pessoasNaFamiliaTexto: r.pessoas === 5 ? '5 ou mais' : (r.pessoas ? String(r.pessoas) : null),
+        possuiImovel: r.possuiImovel == null ? null : (r.possuiImovel ? 'sim' : 'nao'),
+        objetivo: r.objetivo || null,
+        objetivoTexto: ROTULOS.objetivo[r.objetivo] || null
+      },
+
+      qualificacao: {
+        jaTentouFinanciar: r.jaFinanciou || null,
+        jaTentouFinanciarTexto: ROTULOS.jaFinanciou[r.jaFinanciou] || null,
+        momentoDeCompra: r.momento || null,
+        momentoDeCompraTexto: ROTULOS.momento[r.momento] || null,
+        prazoDecisao: r.prazo || null,
+        prazoDecisaoTexto: ROTULOS.prazo[r.prazo] || null,
+        prontoParaSeguir: r.pronto || null,
+        prontoParaSeguirTexto: ROTULOS.pronto[r.pronto] || null,
+        temperatura: estado.temperatura ? estado.temperatura.nivel : null,
+        pontuacao: estado.temperatura ? estado.temperatura.pontos : null
+      },
+
+      dadosCalculados: {
+        projecaoAluguel5Anos: porAnos[5] != null ? porAnos[5] : null,
+        projecaoAluguel10Anos: porAnos[10] != null ? porAnos[10] : null,
+        projecaoAluguel20Anos: porAnos[20] != null ? porAnos[20] : null,
+        statusEstimativa: est.status || null,
+        faixaPrograma: est.faixaPrograma || null,
+        estimativaFinanciamento: est.financiamento ? Math.round(est.financiamento) : null,
+        estimativaFinanciamentoMin: est.faixaFinanciamento ? est.faixaFinanciamento.min : null,
+        estimativaFinanciamentoMax: est.faixaFinanciamento ? est.faixaFinanciamento.max : null,
+        estimativaImovel: est.valorImovel ? Math.round(est.valorImovel) : null,
+        valorMinimoImovel: est.valorMinimoImovel || null,
+        imovelReferenciaDaConta: est.imovelReferencia ? Math.round(est.imovelReferencia) : null,
+        entradaNecessaria: est.entradaNecessaria != null ? Math.round(est.entradaNecessaria) : null,
+        complementoEntrada: est.complementoEntrada != null ? Math.round(est.complementoEntrada) : null,
+        estimativaImovelMin: est.faixaImovel ? est.faixaImovel.min : null,
+        estimativaImovelMax: est.faixaImovel ? est.faixaImovel.max : null,
+        parcelaEstimada: est.parcelaEstimada ? Math.round(est.parcelaEstimada) : null,
+        subsidioEstimado: est.subsidioEstimado != null ? Math.round(est.subsidioEstimado) : null,
+        capacidadePelaRenda: est.capacidadePelaRenda ? Math.round(est.capacidadePelaRenda) : null,
+        fatorLimitante: est.fatorLimitante || null,
+        indicadorInterno: estado.diagnostico ? estado.diagnostico.indicadorInterno : null,
+        pendencias: estado.diagnostico ? estado.diagnostico.pendencias : []
+      },
+
+      parametrosUtilizados: {
+        taxaJurosAnual: est.taxaJurosAnual != null ? est.taxaJurosAnual : null,
+        prazoMeses: est.prazoMeses || null,
+        sistemaAmortizacao: est.sistemaAmortizacao || null,
+        comprometimentoRenda: est.comprometimentoRenda || null,
+        percentualFinanciavel: est.percentualFinanciavel || null,
+        parcelaMaximaConsiderada: est.parcelaMaxima ? Math.round(est.parcelaMaxima) : null
+      },
+
+      resumoCorretor: resumoCorretor(estado),
+
+      // Os mesmos dados numa lista simples, f\u00e1cil de mapear no GoHighLevel
+      // (Inbound Webhook) ou em qualquer CRM que n\u00e3o l\u00ea JSON aninhado.
+      campos: camposPlanos(estado, evento)
+    };
+  }
+
+  function telefoneE164(numero, ddi) {
+    const d = String(numero || '').replace(/\D/g, '');
+    if (!d) return null;
+    if ((d.length === 12 || d.length === 13) && d.indexOf(ddi) === 0) return '+' + d;
+    return '+' + ddi + d;
+  }
+
+  function camposPlanos(estado, evento) {
+    const cfg = window.CALC_CONFIG;
+    const r = estado.respostas;
+    const est = estado.estimativa || {};
+    const tempo = estado.tempoCalculado || {};
+    const proj = {};
+    (estado.projecao || []).forEach(function (p) { proj[p.anos] = Math.round(p.valor); });
+    const nome = estado.lead.nome || '';
+    const arred = function (v) { return v ? Math.round(v) : ''; };
+
+    const c = {
+      evento: evento,
+      nome: nome,
+      primeiro_nome: nome.split(' ')[0] || '',
+      sobrenome: nome.split(' ').slice(1).join(' '),
+      telefone: telefoneE164(estado.lead.whatsapp, cfg.crm.ddiPadrao || '55') || '',
+      renda_familiar: estado.lead.renda || '',
+      aluguel_mensal: r.aluguel || '',
+      tempo_aluguel: textoTempo(tempo.meses) + (tempo.origem === 'faixa' ? ' (aprox.)' : ''),
+      tempo_aluguel_meses: tempo.meses || '',
+      total_pago_aluguel: arred(estado.totalPago),
+      tem_entrada: ROTULOS.simNao[r.entradaResposta] || '',
+      valor_entrada: r.entradaResposta === 'sim' ? r.entradaValor : '',
+      tem_fgts: ROTULOS.simNao[r.fgtsResposta] || '',
+      valor_fgts: r.fgtsResposta === 'sim' ? (r.fgtsValor || '') : '',
+      pessoas_familia: r.pessoas === 5 ? '5 ou mais' : (r.pessoas || ''),
+      possui_imovel: r.possuiImovel == null ? '' : (r.possuiImovel ? 'Sim' : 'N\u00e3o'),
+      objetivo: ROTULOS.objetivo[r.objetivo] || '',
+      ja_tentou_financiar: ROTULOS.jaFinanciou[r.jaFinanciou] || '',
+      momento_compra: ROTULOS.momento[r.momento] || '',
+      prazo_decisao: ROTULOS.prazo[r.prazo] || '',
+      pronto_para_seguir: ROTULOS.pronto[r.pronto] || '',
+      temperatura: estado.temperatura ? ROTULOS.temperatura[estado.temperatura.nivel] : '',
+      pontuacao: estado.temperatura ? estado.temperatura.pontos : '',
+      projecao_5_anos: proj[5] || '',
+      projecao_10_anos: proj[10] || '',
+      projecao_20_anos: proj[20] || '',
+      status_estimativa: est.status || '',
+      faixa_imovel: est.status === 'estimado' ? textoFaixa(est.faixaImovel) : '',
+      faixa_financiamento: est.faixaFinanciamento ? textoFaixa(est.faixaFinanciamento) : '',
+      parcela_estimada: arred(est.parcelaEstimada),
+      entrada_estimada: arred(est.entradaNecessaria),
+      complemento_entrada: arred(est.complementoEntrada),
+      resumo_corretor: resumoCorretor(estado)
+    };
+    Object.keys(estado.rastreio || {}).forEach(function (k) { c[k] = estado.rastreio[k]; });
+    return c;
+  }
+
+  /* ---------- Resumo em texto para o corretor ---------- */
+
+  // interno = true inclui temperatura e notas que o cliente n\u00e3o deve ver
+  function resumoCorretor(estado, interno) {
+    if (interno === undefined) interno = true;
+    const r = estado.respostas;
+    const est = estado.estimativa || {};
+    const tempo = estado.tempoCalculado || {};
+    const linhas = [];
+
+    linhas.push('Lead simulou possibilidade de sair do aluguel.');
+    if (interno && estado.temperatura) {
+      linhas.push('Temperatura: ' + ROTULOS.temperatura[estado.temperatura.nivel] + ' (' + estado.temperatura.pontos + ' pontos)');
+    }
+    if (estado.lead.nome) linhas.push('Nome: ' + estado.lead.nome);
+    linhas.push('Renda familiar: ' + (brl(estado.lead.renda) || 'N\u00e3o informada'));
+    linhas.push('Aluguel atual: ' + (brl(r.aluguel) || 'N\u00e3o informado'));
+    linhas.push('Tempo pagando aluguel: ' + textoTempo(tempo.meses) + (tempo.origem === 'faixa' ? ' (aprox.)' : ''));
+    if (estado.totalPago) linhas.push('Estimativa j\u00e1 paga em aluguel: ' + brl(estado.totalPago));
+
+    if (r.entradaResposta === 'sim') linhas.push('Entrada: ' + (brl(r.entradaValor) || 'Sim, valor n\u00e3o informado'));
+    else linhas.push('Entrada: ' + (ROTULOS.simNao[r.entradaResposta] || 'N\u00e3o informado'));
+
+    let fgts = ROTULOS.simNao[r.fgtsResposta] || 'N\u00e3o informado';
+    if (r.fgtsResposta === 'sim' && r.fgtsValor) fgts += ' (aprox. ' + brl(r.fgtsValor) + ')';
+    linhas.push('FGTS: ' + fgts);
+
+    linhas.push('Pessoas na fam\u00edlia: ' + (r.pessoas === 5 ? '5 ou mais' : (r.pessoas || 'N\u00e3o informado')));
+    linhas.push('Possui im\u00f3vel: ' + (r.possuiImovel == null ? 'N\u00e3o informado' : (r.possuiImovel ? 'Sim' : 'N\u00e3o')));
+    linhas.push('Objetivo: ' + (ROTULOS.objetivo[r.objetivo] || 'N\u00e3o informado'));
+    linhas.push('Prazo para decidir: ' + (ROTULOS.prazo[r.prazo] || 'N\u00e3o informado'));
+    linhas.push('Pronto para seguir: ' + (ROTULOS.pronto[r.pronto] || 'N\u00e3o informado'));
+    linhas.push('Momento: ' + (ROTULOS.momento[r.momento] || 'N\u00e3o informado'));
+    linhas.push('J\u00e1 tentou financiar: ' + (ROTULOS.jaFinanciou[r.jaFinanciou] || 'N\u00e3o informado') +
+      (interno && r.jaFinanciou === 'nao-consegui' ? ' (vale perguntar o motivo)' : ''));
+
+    if (est.status === 'estimado') {
+      linhas.push('Estimativa de financiamento: ' + textoFaixa(est.faixaFinanciamento));
+      linhas.push('Estimativa de im\u00f3vel: ' + textoFaixa(est.faixaImovel));
+    } else if (est.status === 'fora-das-faixas') {
+      linhas.push('Renda acima das faixas configuradas. Avaliar outras linhas.');
+    } else if (est.status === 'abaixo-do-minimo') {
+      linhas.push('Estimativa abaixo do im\u00f3vel m\u00ednimo (' + brl(est.valorMinimoImovel) + '). Financiamento pela renda: ' + textoFaixa(est.faixaFinanciamento));
+    }
+    if (est.imovelReferencia) {
+      linhas.push('Entrada estimada: ' + brl(est.entradaNecessaria) +
+        (est.complementoEntrada > 0 ? ' (faltam cerca de ' + brl(est.complementoEntrada) + ')' : ' (coberta)'));
+    }
+
+    return linhas.join('\n');
+  }
+
+  /* ---------- Envio ---------- */
+
+  function enviar(estado, evento, cfg) {
+    const payload = montarPayload(estado, evento);
+
+    if (cfg.crm.usarDataLayer) {
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ event: 'calculadora_' + evento, lead: payload });
+    }
+
+    if (!cfg.crm.webhookUrl) {
+      // Sem webhook configurado: deixa o JSON vis\u00edvel no console para teste
+      console.info('[Calculadora] webhook n\u00e3o configurado. Payload:', payload);
+      return Promise.resolve({ ok: true, simulado: true, payload: payload });
+    }
+
+    // O JSON leva os campos planos no primeiro n\u00edvel tamb\u00e9m, para facilitar o mapeamento
+    const corpo = JSON.stringify(Object.assign({}, payload.campos, payload));
+    return fetch(cfg.crm.webhookUrl, {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, cfg.crm.headers || {}),
+      body: corpo,
+      keepalive: true
+    }).then(function (res) {
+      return { ok: res.ok, status: res.status, payload: payload };
+    }).catch(function (erro) {
+      if (!cfg.crm.reenviarComoFormularioSeBloquear) {
+        console.warn('[Calculadora] falha ao enviar ao CRM', erro);
+        return { ok: false, erro: erro, payload: payload };
+      }
+      // Plano B: formul\u00e1rio simples n\u00e3o passa pela checagem de CORS do navegador
+      const form = new URLSearchParams();
+      Object.keys(payload.campos).forEach(function (k) { form.append(k, payload.campos[k]); });
+      return fetch(cfg.crm.webhookUrl, { method: 'POST', mode: 'no-cors', body: form, keepalive: true })
+        .then(function () { return { ok: true, formulario: true, payload: payload }; })
+        .catch(function (erro2) {
+          console.warn('[Calculadora] falha ao enviar ao CRM', erro2);
+          return { ok: false, erro: erro2, payload: payload };
+        });
+    });
+  }
+
+  function linkWhatsapp(estado, cfg) {
+    const nome = estado.lead.nome ? estado.lead.nome.split(' ')[0] : '';
+    const texto = 'Ol\u00e1! ' + (nome ? 'Sou ' + nome + '. ' : '') +
+      'Fiz a simula\u00e7\u00e3o de aluguel x financiamento e quero entender quais im\u00f3veis fazem sentido para mim.\n\n' +
+      resumoCorretor(estado, false);
+    return 'https://wa.me/' + String(cfg.ctaFinal.whatsappNumero).replace(/\D/g, '') +
+      '?text=' + encodeURIComponent(texto);
+  }
+
+  return {
+    montarPayload: montarPayload,
+    resumoCorretor: resumoCorretor,
+    enviar: enviar,
+    linkWhatsapp: linkWhatsapp,
+    brl: brl,
+    textoTempo: textoTempo,
+    textoFaixa: textoFaixa,
+    ROTULOS: ROTULOS
+  };
+})();
+
+/* ==========================================================================
+   APP
+   Controla as telas, as respostas e a exibi\u00e7\u00e3o do resultado.
+   ========================================================================== */
+
+(function () {
+  const cfg = window.CALC_CONFIG;
+  const C = window.Calculos;
+  const brl = window.CRM.brl;
+  const reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const $ = function (sel, raiz) { return (raiz || document).querySelector(sel); };
+  const $$ = function (sel, raiz) { return Array.prototype.slice.call((raiz || document).querySelectorAll(sel)); };
+
+  /* ---------- Estado ---------- */
+
+  const estado = {
+    lead: { nome: '', whatsapp: '', renda: 0, rendaPerguntadaAqui: false },
+    rastreio: {},
+    respostas: {
+      aluguel: 0, tempoFaixa: null, anos: 0, meses: 0,
+      entradaResposta: null, entradaValor: 0,
+      fgtsResposta: null, fgtsValor: 0,
+      pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
+    },
+    tempoCalculado: null,
+    totalPago: 0,
+    projecao: [],
+    estimativa: null,
+    diagnostico: null,
+    fluxo: [],
+    historico: [],
+    telaAtual: 'intro',
+    enviado: false,
+    horizonteAtivo: 10
+  };
+
+  /* ---------- Utilidades ---------- */
+
+  // Aceita "4500", "4.500", "4.500,00", "R$ 4.500", "4500.50"
+  function lerMoeda(texto) {
+    if (texto == null) return 0;
+    let s = String(texto).trim().replace(/[^\d.,]/g, '');
+    if (!s) return 0;
+    if (s.indexOf(',') >= 0) s = s.split(',')[0].replace(/\./g, '');
+    else if (/^\d+\.\d{1,2}$/.test(s)) s = s.split('.')[0];
+    else s = s.replace(/\./g, '');
+    return parseInt(s, 10) || 0;
+  }
+
+  function formatarMilhar(n) {
+    return n ? n.toLocaleString('pt-BR') : '';
+  }
+
+  function animarNumero(el, valor, duracao) {
+    if (reduzirMovimento || !valor) { el.textContent = brl(valor || 0); return; }
+    const inicio = performance.now();
+    const d = duracao || 1400;
+    function passo(agora) {
+      const t = Math.min(1, (agora - inicio) / d);
+      const suave = 1 - Math.pow(1 - t, 3);
+      el.textContent = brl(valor * suave);
+      if (t < 1) requestAnimationFrame(passo);
+    }
+    requestAnimationFrame(passo);
+  }
+
+  function primeiroNome(nome) {
+    return (nome || '').trim().split(/\s+/)[0] || '';
+  }
+
+  function capitalizar(nome) {
+    return nome ? nome.charAt(0).toUpperCase() + nome.slice(1).toLowerCase() : '';
+  }
+
+  /* ---------- Dados da Landing Page ---------- */
+
+  function carregarDadosLP() {
+    const params = new URLSearchParams(location.search);
+    const mapa = cfg.landingPage.parametrosUrl;
+    let salvo = {};
+
+    try {
+      const bruto = sessionStorage.getItem(cfg.landingPage.chaveStorage) ||
+        localStorage.getItem(cfg.landingPage.chaveStorage);
+      if (bruto) salvo = JSON.parse(bruto) || {};
+    } catch (e) { salvo = {}; }
+
+    function pegar(campo) {
+      const nomes = mapa[campo] || [campo];
+      for (let k = 0; k < nomes.length; k++) {
+        if (params.get(nomes[k])) return params.get(nomes[k]);
+      }
+      for (let k = 0; k < nomes.length; k++) {
+        if (salvo[nomes[k]]) return salvo[nomes[k]];
+      }
+      return '';
+    }
+
+    estado.lead.nome = String(pegar('nome')).trim().split(/\s+/).map(capitalizar).join(' ');
+    estado.lead.whatsapp = String(pegar('whatsapp')).replace(/\D/g, '');
+    estado.lead.renda = lerMoeda(pegar('renda'));
+
+    cfg.landingPage.parametrosRastreio.forEach(function (p) {
+      const v = params.get(p) || salvo[p];
+      if (v) estado.rastreio[p] = v;
+    });
+  }
+
+  /* ---------- Fluxo de telas ---------- */
+
+  function montarFluxo() {
+    const fluxo = ['intro'];
+    if (!estado.lead.renda) fluxo.push('renda');
+    fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'jaFinanciou',
+      'objetivo', 'momento', 'prazo', 'pronto', 'calculando', 'resultado');
+    estado.fluxo = fluxo;
+  }
+
+  function etapasDoFluxo() {
+    return estado.fluxo.filter(function (t) {
+      const el = $('[data-tela="' + t + '"]');
+      return el && el.hasAttribute('data-etapa');
+    });
+  }
+
+  function proximaTela(atual) {
+    const i = estado.fluxo.indexOf(atual);
+    return estado.fluxo[i + 1];
+  }
+
+  function irPara(destino, voltando) {
+    const atual = $('[data-tela="' + estado.telaAtual + '"]');
+    const nova = $('[data-tela="' + destino + '"]');
+    if (!nova || atual === nova) return;
+
+    if (!voltando) estado.historico.push(estado.telaAtual);
+
+    atual.classList.remove('ativa', 'volta');
+    nova.classList.toggle('volta', !!voltando);
+    nova.classList.add('ativa');
+    estado.telaAtual = destino;
+
+    // Sobe at\u00e9 o in\u00edcio da calculadora (que pode estar no meio de uma p\u00e1gina, como no GoHighLevel)
+    const inicio = $('#app').getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({ top: Math.max(0, inicio), behavior: reduzirMovimento ? 'auto' : 'smooth' });
+    atualizarTopo();
+    aoEntrar(destino);
+
+    const campo = $('input', nova);
+    if (campo && window.innerWidth > 720) setTimeout(function () { campo.focus(); }, 350);
+  }
+
+  function voltar() {
+    const anterior = estado.historico.pop();
+    if (anterior) irPara(anterior, true);
+  }
+
+  function atualizarTopo() {
+    const t = estado.telaAtual;
+    const etapas = etapasDoFluxo();
+    const pos = etapas.indexOf(t);
+    const progresso = $('#progresso');
+
+    const semVoltar = ['intro', 'calculando', 'resultado'];
+    $('#btnVoltar').hidden = semVoltar.indexOf(t) >= 0;
+    $('#app').classList.toggle('modo-escuro', t === 'passado');
+
+    if (pos >= 0) {
+      progresso.hidden = false;
+      $('#progressoTexto').textContent = 'Etapa ' + (pos + 1) + ' de ' + etapas.length;
+      $('#progressoBarra').style.width = ((pos + 1) / etapas.length * 100) + '%';
+    } else if (t === 'passado' || t === 'futuro') {
+      progresso.hidden = false;
+      $('#progressoTexto').textContent = 'Seu hist\u00f3rico';
+      const feitas = etapas.indexOf('tempo') + 1;
+      $('#progressoBarra').style.width = (feitas / etapas.length * 100) + '%';
+    } else {
+      progresso.hidden = true;
+    }
+  }
+
+  /* ---------- Ao entrar em cada tela ---------- */
+
+  function aoEntrar(tela) {
+    if (tela === 'passado') mostrarPassado();
+    if (tela === 'futuro') mostrarFuturo();
+    if (tela === 'calculando') calcular();
+  }
+
+  /* ---------- Valida\u00e7\u00e3o ---------- */
+
+  function erro(tela, msg) {
+    const el = $('[data-tela="' + tela + '"]');
+    let aviso = $('.erro', el);
+    if (!aviso) {
+      aviso = document.createElement('p');
+      aviso.className = 'erro';
+      aviso.setAttribute('role', 'alert');
+      const btn = $('.btn-principal', el);
+      el.insertBefore(aviso, btn);
+    }
+    aviso.textContent = msg;
+    el.classList.remove('tremer');
+    void el.offsetWidth;
+    el.classList.add('tremer');
+    return false;
+  }
+
+  function limparErro(tela) {
+    const aviso = $('[data-tela="' + tela + '"] .erro');
+    if (aviso) aviso.remove();
+  }
+
+  const validar = {
+    renda: function () {
+      const v = lerMoeda($('#inRenda').value);
+      if (v <= 0) return erro('renda', 'Informe a renda mensal da fam\u00edlia para continuar.');
+      estado.lead.renda = v;
+      estado.lead.rendaPerguntadaAqui = true;
+      return true;
+    },
+    aluguel: function () {
+      const v = lerMoeda($('#inAluguel').value);
+      if (v <= 0) return erro('aluguel', 'Informe o valor do aluguel para continuar.');
+      estado.respostas.aluguel = v;
+      return true;
+    },
+    tempo: function () {
+      lerTempo();
+      if (!estado.tempoCalculado.meses) return erro('tempo', 'Escolha uma op\u00e7\u00e3o ou informe os anos e meses.');
+      return true;
+    },
+    entrada: function () {
+      const r = estado.respostas;
+      if (!r.entradaResposta) return erro('entrada', 'Escolha uma das op\u00e7\u00f5es.');
+      if (r.entradaResposta === 'sim') {
+        r.entradaValor = lerMoeda($('#inEntrada').value);
+        if (r.entradaValor <= 0) return erro('entrada', 'Informe o valor ou escolha "Ainda n\u00e3o sei".');
+      } else {
+        r.entradaValor = 0;
+      }
+      return true;
+    },
+    fgts: function () {
+      const r = estado.respostas;
+      if (!r.fgtsResposta) return erro('fgts', 'Escolha uma das op\u00e7\u00f5es.');
+      r.fgtsValor = r.fgtsResposta === 'sim' ? lerMoeda($('#inFgts').value) : 0;
+      return true;
+    }
+  };
+
+  function lerTempo() {
+    estado.respostas.anos = parseInt($('#inAnos').value, 10) || 0;
+    estado.respostas.meses = Math.min(11, parseInt($('#inMeses').value, 10) || 0);
+    estado.tempoCalculado = C.mesesDeAluguel({
+      anos: estado.respostas.anos,
+      meses: estado.respostas.meses,
+      faixa: estado.respostas.tempoFaixa
+    }, cfg);
+  }
+
+  /* ---------- Dicas ao vivo ---------- */
+
+  function atualizarDicaAluguel() {
+    const v = lerMoeda($('#inAluguel').value);
+    $('#dicaAluguel').innerHTML = v > 0
+      ? 'Isso d\u00e1 <strong>' + brl(v * 12) + '</strong> por ano.'
+      : '';
+  }
+
+  function atualizarDicaTempo() {
+    lerTempo();
+    const t = estado.tempoCalculado;
+    const el = $('#dicaTempo');
+    if (!t.meses) { el.textContent = ''; return; }
+    el.innerHTML = t.origem === 'faixa'
+      ? 'Vamos considerar cerca de <strong>' + window.CRM.textoTempo(t.meses) + '</strong>.'
+      : 'Vamos considerar <strong>' + window.CRM.textoTempo(t.meses) + '</strong> (' + t.meses + ' meses).';
+  }
+
+  /* ---------- Tela: passado ---------- */
+
+  function mostrarPassado() {
+    const r = estado.respostas;
+    const t = estado.tempoCalculado;
+    estado.totalPago = C.totalAluguel(r.aluguel, t.meses);
+    estado.projecao = C.projecaoAluguel(r.aluguel, cfg);
+
+    animarNumero($('#numPassado'), estado.totalPago, 1600);
+    $('#detalhePassado').innerHTML =
+      brl(r.aluguel) + ' por m\u00eas durante ' + (t.origem === 'faixa' ? 'cerca de ' : '') +
+      '<strong>' + window.CRM.textoTempo(t.meses) + '</strong>.';
+
+    // Um quadradinho por m\u00eas (agrupa quando passa de 120)
+    const grafico = $('#graficoMeses');
+    const porBloco = t.meses > 120 ? Math.ceil(t.meses / 120) : 1;
+    const blocos = Math.ceil(t.meses / porBloco);
+    grafico.innerHTML = '';
+    for (let k = 0; k < blocos; k++) {
+      const b = document.createElement('span');
+      b.style.animationDelay = reduzirMovimento ? '0s' : (k * Math.min(18, 1200 / blocos)) + 'ms';
+      grafico.appendChild(b);
+    }
+    const legenda = document.createElement('small');
+    legenda.textContent = porBloco === 1
+      ? 'Cada quadrado \u00e9 um m\u00eas de aluguel.'
+      : 'Cada quadrado representa ' + porBloco + ' meses de aluguel.';
+    grafico.appendChild(legenda);
+  }
+
+  /* ---------- Tela: futuro ---------- */
+
+  function mostrarFuturo() {
+    const abas = $('#abasHorizonte');
+    abas.innerHTML = '';
+    estado.projecao.forEach(function (p) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'aba' + (p.anos === estado.horizonteAtivo ? ' ativa' : '');
+      b.setAttribute('role', 'tab');
+      b.textContent = p.anos + ' anos';
+      b.addEventListener('click', function () {
+        estado.horizonteAtivo = p.anos;
+        mostrarFuturo();
+      });
+      abas.appendChild(b);
+    });
+
+    const ativo = estado.projecao.find(function (p) { return p.anos === estado.horizonteAtivo; }) || estado.projecao[0];
+    $('#futuroRotulo').textContent = 'Em ' + ativo.anos + ' anos';
+    animarNumero($('#numFuturo'), ativo.valor, 900);
+
+    desenharBarras($('#barrasFuturo'), 'vertical', ativo.anos);
+  }
+
+  function desenharBarras(alvo, tipo, destaque) {
+    const itens = [{ rotulo: 'At\u00e9 hoje', valor: estado.totalPago, passado: true }]
+      .concat(estado.projecao.map(function (p) {
+        return { rotulo: tipo === 'vertical' ? p.anos + ' anos' : 'Em ' + p.anos + ' anos', valor: p.valor, anos: p.anos };
+      }));
+    const max = Math.max.apply(null, itens.map(function (i) { return i.valor; })) || 1;
+
+    alvo.innerHTML = '';
+    alvo.className = (tipo === 'vertical' ? 'barras-futuro' : 'barras-longo');
+    itens.forEach(function (item, k) {
+      const linha = document.createElement('div');
+      linha.className = 'barra' + (item.passado ? ' barra-passado' : '') + (item.anos === destaque ? ' barra-destaque' : '');
+      const pct = Math.max(4, item.valor / max * 100);
+      linha.innerHTML =
+        '<span class="barra-rotulo">' + item.rotulo + '</span>' +
+        '<span class="barra-trilho"><span class="barra-fill" style="--tam:' + pct + '%;--atraso:' + (k * 120) + 'ms"></span></span>' +
+        '<span class="barra-valor">' + brl(item.valor) + '</span>';
+      alvo.appendChild(linha);
+    });
+  }
+
+  /* ---------- Calcular ---------- */
+
+  function calcular() {
+    const r = estado.respostas;
+    estado.estimativa = C.estimarFinanciamento({
+      renda: estado.lead.renda,
+      entrada: r.entradaResposta === 'sim' ? r.entradaValor : 0,
+      fgts: r.fgtsResposta === 'sim' ? r.fgtsValor : 0,
+      pessoas: r.pessoas,
+      possuiImovel: r.possuiImovel
+    }, cfg);
+    estado.diagnostico = C.diagnostico(estado.estimativa, r, cfg);
+    estado.temperatura = C.temperaturaLead(r, estado.estimativa, cfg);
+
+    const itens = $$('#checklist li');
+    itens.forEach(function (li) { li.classList.remove('feito'); });
+    const passo = reduzirMovimento ? 60 : 550;
+    itens.forEach(function (li, k) {
+      setTimeout(function () { li.classList.add('feito'); }, passo * (k + 1));
+    });
+    setTimeout(function () {
+      montarResultado();
+      estado.historico = [];
+      irPara('resultado');
+      if (cfg.crm.enviarAoVerResultado && !estado.enviado) {
+        estado.enviado = true;
+        window.CRM.enviar(estado, 'simulacao_concluida', cfg);
+      }
+    }, passo * (itens.length + 1));
+  }
+
+  /* ---------- Resultado ---------- */
+
+  function linhaDado(rotulo, valor, opcoes) {
+    const o = opcoes || {};
+    return '<div class="dado' + (o.destaque ? ' dado-destaque' : '') + (o.vazio ? ' dado-vazio' : '') + '">' +
+      '<dt>' + rotulo + '</dt><dd>' + valor + (o.nota ? '<small>' + o.nota + '</small>' : '') + '</dd></div>';
+  }
+
+  function montarResultado() {
+    const r = estado.respostas;
+    const est = estado.estimativa;
+    const t = estado.tempoCalculado;
+    const nome = capitalizar(primeiroNome(estado.lead.nome));
+
+    $('#resTitulo').textContent = nome ? nome + ', este \u00e9 o seu diagn\u00f3stico' : 'Este \u00e9 o seu diagn\u00f3stico';
+    animarNumero($('#resPassado'), estado.totalPago, 1400);
+
+    // Cen\u00e1rio atual
+    $('#dadosAtual').innerHTML =
+      linhaDado('Aluguel mensal', brl(r.aluguel)) +
+      linhaDado('Tempo pagando aluguel', (t.origem === 'faixa' ? 'Cerca de ' : '') + window.CRM.textoTempo(t.meses)) +
+      linhaDado('Estimativa j\u00e1 destinada ao aluguel', brl(estado.totalPago), { destaque: true, nota: 'Sem considerar reajustes' });
+
+    // Financiamento
+    let entradaTxt, entradaVazio = false;
+    if (r.entradaResposta === 'sim') entradaTxt = brl(r.entradaValor);
+    else if (r.entradaResposta === 'nao') { entradaTxt = 'Sem entrada no momento'; entradaVazio = true; }
+    else { entradaTxt = 'Ainda n\u00e3o sabe'; entradaVazio = true; }
+
+    let fgtsTxt, fgtsVazio = false;
+    if (r.fgtsResposta === 'sim') {
+      if (r.fgtsValor) fgtsTxt = brl(r.fgtsValor);
+      else { fgtsTxt = 'Possui, valor n\u00e3o informado'; fgtsVazio = true; }
+    } else if (r.fgtsResposta === 'nao') { fgtsTxt = 'N\u00e3o possui'; fgtsVazio = true; }
+    else { fgtsTxt = 'N\u00e3o sabe'; fgtsVazio = true; }
+
+    let html =
+      linhaDado('Renda familiar', brl(estado.lead.renda)) +
+      linhaDado('Entrada informada', entradaTxt, { vazio: entradaVazio }) +
+      linhaDado('FGTS informado', fgtsTxt, { vazio: fgtsVazio });
+
+    if (est.subsidioEstimado > 0) {
+      html += linhaDado('Subs\u00eddio considerado', 'at\u00e9 ' + brl(est.subsidioEstimado), { nota: 'Depende das regras do programa' });
+    }
+
+    const notaParcela = { nota: 'Prazo de ' + Math.round(est.prazoMeses / 12) + ' anos. Valor aproximado' };
+
+    if (est.status === 'estimado') {
+      html +=
+        linhaDado('Estimativa de faixa de im\u00f3vel', window.CRM.textoFaixa(est.faixaImovel), { destaque: true }) +
+        linhaDado('Estimativa de faixa de financiamento', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de refer\u00eancia', 'em torno de ' + brl(est.parcelaEstimada) + '/m\u00eas', notaParcela) +
+        linhaEntrada(est);
+    } else if (est.status === 'abaixo-do-minimo') {
+      html +=
+        linhaDado('Im\u00f3veis dispon\u00edveis', 'a partir de ' + brl(est.valorMinimoImovel), { destaque: true }) +
+        linhaDado('Financiamento estimado pela sua renda', window.CRM.textoFaixa(est.faixaFinanciamento), { destaque: true }) +
+        linhaDado('Parcela de refer\u00eancia', 'em torno de ' + brl(est.parcelaEstimada) + '/m\u00eas', notaParcela) +
+        linhaEntrada(est);
+    } else {
+      html += linhaDado('Estimativa de faixa de financiamento', 'Precisa de an\u00e1lise personalizada', { vazio: true });
+    }
+    $('#dadosFinanciamento').innerHTML = html;
+
+    montarComposicao(est, r);
+
+    // Pr\u00f3ximo passo
+    let proximo = 'Descubra quais possibilidades de financiamento podem fazer sentido para o seu perfil.';
+    if (est.status === 'estimado') {
+      proximo = 'Sua estimativa aponta para im\u00f3veis entre ' + window.CRM.textoFaixa(est.faixaImovel) + '. Descubra quais possibilidades podem fazer sentido para o seu perfil.';
+    } else if (est.status === 'abaixo-do-minimo') {
+      proximo = 'Os im\u00f3veis come\u00e7am em ' + brl(est.valorMinimoImovel) + '. Descubra com um especialista quais caminhos podem aproximar voc\u00ea desse valor.';
+    }
+    $('#resProximoTexto').textContent = proximo;
+
+    // Mensagem
+    const d = estado.diagnostico;
+    const msg = $('#mensagem');
+    msg.className = 'card mensagem mensagem-' + d.tom;
+    $('#mensagemTitulo').textContent = d.titulo;
+    $('#mensagemTexto').textContent = d.texto;
+
+    desenharBarras($('#barrasLongo'), 'horizontal');
+    montarFatores(est, r);
+  }
+
+  // Entrada estimada para o im\u00f3vel e quanto falta al\u00e9m do que a pessoa informou
+  function linhaEntrada(est) {
+    if (est.complementoEntrada > 0) {
+      return linhaDado('Entrada estimada para esse im\u00f3vel', brl(est.entradaNecessaria),
+          { nota: 'Parte que o financiamento n\u00e3o cobre' }) +
+        linhaDado('Diferen\u00e7a a complementar', 'cerca de ' + brl(est.complementoEntrada),
+          { vazio: true, nota: 'Em muitos empreendimentos d\u00e1 para parcelar. O especialista confirma' });
+    }
+    return linhaDado('Entrada estimada para esse im\u00f3vel', brl(est.entradaNecessaria),
+      { nota: 'Coberta pelo que voc\u00ea informou' });
+  }
+
+  function montarComposicao(est, r) {
+    const alvo = $('#composicao');
+    if ((est.status !== 'estimado' && est.status !== 'abaixo-do-minimo') || !est.imovelReferencia) { alvo.innerHTML = ''; return; }
+
+    const partes = [
+      { nome: 'Financiamento', valor: est.financiamento, cls: 'c-fin' },
+      { nome: 'Entrada', valor: r.entradaResposta === 'sim' ? r.entradaValor : 0, cls: 'c-ent' },
+      { nome: 'FGTS', valor: r.fgtsResposta === 'sim' ? r.fgtsValor : 0, cls: 'c-fgts' },
+      { nome: 'Subs\u00eddio', valor: est.subsidioEstimado, cls: 'c-sub' },
+      { nome: 'A complementar', valor: est.complementoEntrada, cls: 'c-falta' }
+    ].filter(function (p) { return p.valor > 0; });
+
+    const total = partes.reduce(function (s, p) { return s + p.valor; }, 0) || 1;
+    alvo.innerHTML =
+      '<p class="composicao-titulo">Como fecha um im\u00f3vel de ' + brl(est.imovelReferencia) + '</p>' +
+      '<div class="composicao-barra">' + partes.map(function (p) {
+        return '<span class="' + p.cls + '" style="width:' + (p.valor / total * 100) + '%"></span>';
+      }).join('') + '</div>' +
+      '<ul class="composicao-legenda">' + partes.map(function (p) {
+        return '<li><i class="' + p.cls + '"></i>' + p.nome + '<b>' + brl(p.valor) + '</b></li>';
+      }).join('') + '</ul>';
+  }
+
+  function montarFatores(est, r) {
+    const fin = cfg.financiamento;
+    const itens = [];
+    const pct = Math.round(fin.comprometimentoRenda * 100);
+
+    itens.push({
+      estado: 'ok', titulo: 'Renda familiar',
+      texto: brl(estado.lead.renda) + '. Nesta simula\u00e7\u00e3o a parcela fica em at\u00e9 ' + pct + '% da renda, cerca de ' + brl(estado.lead.renda * fin.comprometimentoRenda) + ' por m\u00eas.'
+    });
+
+    if (r.entradaResposta === 'sim') {
+      itens.push({ estado: 'ok', titulo: 'Entrada', texto: brl(r.entradaValor) + ' dispon\u00edveis. Quanto maior a entrada, menor o valor financiado.' });
+    } else {
+      itens.push({ estado: 'pendente', titulo: 'Entrada', texto: r.entradaResposta === 'nao-sei'
+        ? 'Voc\u00ea ainda n\u00e3o sabe o valor. Vale confirmar, porque a entrada muda bastante a conta.'
+        : 'Sem entrada no momento. FGTS e subs\u00eddio podem ajudar nessa parte.' });
+    }
+
+    if (r.fgtsResposta === 'sim') {
+      itens.push({ estado: r.fgtsValor ? 'ok' : 'pendente', titulo: 'FGTS', texto: r.fgtsValor
+        ? brl(r.fgtsValor) + ' informados. O FGTS pode ser usado na entrada, conforme as regras.'
+        : 'Voc\u00ea tem FGTS, mas n\u00e3o sabe o saldo. D\u00e1 para consultar no app do FGTS.' });
+    } else {
+      itens.push({ estado: r.fgtsResposta === 'nao-sei' ? 'pendente' : 'neutro', titulo: 'FGTS', texto: r.fgtsResposta === 'nao-sei'
+        ? 'Se voc\u00ea j\u00e1 trabalhou com carteira assinada, pode ter saldo. Vale consultar.'
+        : 'N\u00e3o considerado na estimativa.' });
+    }
+
+    itens.push({
+      estado: 'neutro', titulo: 'Composi\u00e7\u00e3o familiar',
+      texto: (r.pessoas === 5 ? '5 ou mais pessoas' : r.pessoas + (r.pessoas === 1 ? ' pessoa' : ' pessoas')) + '. Pode influenciar regras e benef\u00edcios do programa.'
+    });
+
+    itens.push(r.possuiImovel
+      ? { estado: 'atencao', titulo: 'Im\u00f3vel no seu nome', texto: 'Voc\u00ea informou que j\u00e1 tem im\u00f3vel. Isso precisa ser analisado, porque muda as regras que podem valer para voc\u00ea.' }
+      : { estado: 'ok', titulo: 'Im\u00f3vel no seu nome', texto: 'Voc\u00ea informou que n\u00e3o tem im\u00f3vel. Esse costuma ser um requisito do programa.' });
+
+    if (est.taxaJurosAnual != null) {
+      itens.push({
+        estado: 'neutro', titulo: 'Prazo e juros',
+        texto: 'Simula\u00e7\u00e3o com prazo de ' + Math.round(fin.prazoMeses / 12) + ' anos e juros de refer\u00eancia de ' +
+          (est.taxaJurosAnual * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + '% ao ano.'
+      });
+    }
+
+    $('#fatores').innerHTML = itens.map(function (i) {
+      return '<li class="fator fator-' + i.estado + '"><span class="fator-icone" aria-hidden="true"></span>' +
+        '<div><strong>' + i.titulo + '</strong><p>' + i.texto + '</p></div></li>';
+    }).join('');
+  }
+
+  /* ---------- CTA ---------- */
+
+  function clicarCta() {
+    const cta = cfg.ctaFinal;
+    let destino = '';
+    if (cta.tipo === 'whatsapp') destino = window.CRM.linkWhatsapp(estado, cfg);
+    else if (cta.tipo === 'url' && cta.url) {
+      const u = new URL(cta.url, location.href);
+      if (estado.lead.nome) u.searchParams.set('nome', estado.lead.nome);
+      if (estado.lead.whatsapp) u.searchParams.set('whatsapp', estado.lead.whatsapp);
+      destino = u.toString();
+    }
+
+    // Abre antes do envio para o navegador n\u00e3o bloquear a nova aba
+    let janela = null;
+    if (destino && cta.abrirEmNovaAba) janela = window.open(destino, '_blank', 'noopener');
+
+    $('#ctaFeedback').textContent = 'Pronto! Suas informa\u00e7\u00f5es foram encaminhadas para um especialista.';
+    window.CRM.enviar(estado, 'cta_especialista', cfg).then(function () {
+      if (destino && (!cta.abrirEmNovaAba || !janela)) location.href = destino;
+    });
+  }
+
+  /* ---------- Refazer ---------- */
+
+  function refazer() {
+    Object.assign(estado.respostas, {
+      aluguel: 0, tempoFaixa: null, anos: 0, meses: 0, entradaResposta: null, entradaValor: 0,
+      fgtsResposta: null, fgtsValor: 0, pessoas: null, possuiImovel: null, objetivo: null,
+      jaFinanciou: null, momento: null, prazo: null, pronto: null
+    });
+    // Se a renda foi perguntada aqui, pergunta de novo
+    if (estado.lead.rendaPerguntadaAqui) { estado.lead.renda = 0; estado.lead.rendaPerguntadaAqui = false; }
+    estado.enviado = false;
+    $$('#app input').forEach(function (i) { i.value = ''; });
+    $$('.opcao.selecionada').forEach(function (o) { o.classList.remove('selecionada'); o.setAttribute('aria-pressed', 'false'); });
+    $$('.revela').forEach(function (r) { r.hidden = true; });
+    $$('.dica-viva').forEach(function (d) { d.textContent = ''; });
+    montarFluxo();
+    estado.historico = [];
+    irPara('intro', true);
+  }
+
+  /* ---------- Eventos ---------- */
+
+  function ligarEventos() {
+    $('#btnVoltar').addEventListener('click', voltar);
+
+    document.addEventListener('click', function (ev) {
+      const alvo = ev.target.closest('[data-acao]');
+      if (!alvo) return;
+      const acao = alvo.getAttribute('data-acao');
+      const tela = estado.telaAtual;
+
+      if (acao === 'comecar') irPara(proximaTela('intro'));
+      if (acao === 'continuar') {
+        const regra = alvo.getAttribute('data-valida');
+        if (regra && validar[regra] && !validar[regra]()) return;
+        limparErro(tela);
+        irPara(proximaTela(tela));
+      }
+      if (acao === 'ir') irPara(alvo.getAttribute('data-destino'));
+      if (acao === 'cta') clicarCta();
+      if (acao === 'refazer') refazer();
+    });
+
+    // Op\u00e7\u00f5es (bot\u00f5es de escolha)
+    $$('[data-grupo]').forEach(function (grupo) {
+      const chave = grupo.getAttribute('data-grupo');
+      const avanca = grupo.hasAttribute('data-avanca');
+      $$('.opcao', grupo).forEach(function (op) {
+        op.setAttribute('aria-pressed', 'false');
+        op.addEventListener('click', function () {
+          $$('.opcao', grupo).forEach(function (o) { o.classList.remove('selecionada'); o.setAttribute('aria-pressed', 'false'); });
+          op.classList.add('selecionada');
+          op.setAttribute('aria-pressed', 'true');
+          escolher(chave, op.getAttribute('data-valor'));
+          limparErro(estado.telaAtual);
+          if (avanca) {
+            const telaDaOpcao = estado.telaAtual;
+            setTimeout(function () {
+              if (estado.telaAtual === telaDaOpcao) irPara(proximaTela(telaDaOpcao));
+            }, reduzirMovimento ? 50 : 320);
+          }
+        });
+      });
+    });
+
+    // Campos em R$ com m\u00e1scara de milhar
+    $$('[data-moeda]').forEach(function (inp) {
+      inp.addEventListener('input', function () {
+        const n = lerMoeda(inp.value.replace(/[^\d]/g, ''));
+        inp.value = formatarMilhar(n);
+        if (inp.id === 'inAluguel') atualizarDicaAluguel();
+      });
+    });
+
+    ['#inAnos', '#inMeses'].forEach(function (sel) {
+      $(sel).addEventListener('input', atualizarDicaTempo);
+    });
+
+    // Enter avan\u00e7a
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key !== 'Enter' || ev.target.tagName !== 'INPUT') return;
+      const btn = $('[data-tela="' + estado.telaAtual + '"] .btn-principal');
+      if (btn) { ev.preventDefault(); btn.click(); }
+    });
+  }
+
+  function escolher(chave, valor) {
+    const r = estado.respostas;
+    if (chave === 'tempoFaixa') { r.tempoFaixa = valor; atualizarDicaTempo(); }
+    if (chave === 'entradaResposta') {
+      r.entradaResposta = valor;
+      const box = $('#revelaEntrada');
+      box.hidden = valor !== 'sim';
+      if (valor === 'sim') setTimeout(function () { $('#inEntrada').focus(); }, 60);
+    }
+    if (chave === 'fgtsResposta') {
+      r.fgtsResposta = valor;
+      $('#revelaFgts').hidden = valor !== 'sim';
+    }
+    if (chave === 'pessoas') r.pessoas = parseInt(valor, 10);
+    if (chave === 'possuiImovel') r.possuiImovel = valor === 'sim';
+    if (['objetivo', 'jaFinanciou', 'momento', 'prazo', 'pronto'].indexOf(chave) >= 0) r[chave] = valor;
+  }
+
+  /* ---------- In\u00edcio ---------- */
+
+  function iniciar() {
+    carregarDadosLP();
+    montarFluxo();
+
+    const nome = capitalizar(primeiroNome(estado.lead.nome));
+    $('#saudacao').textContent = nome ? 'Ol\u00e1, ' + nome + '! Vamos entender o seu cen\u00e1rio.' : 'Ol\u00e1! Vamos entender o seu cen\u00e1rio.';
+
+    const marca = $('#marca');
+    if (cfg.marca.logoUrl) {
+      const img = document.createElement('img');
+      img.src = cfg.marca.logoUrl;
+      img.alt = cfg.marca.nome;
+      marca.appendChild(img);
+    } else {
+      marca.textContent = cfg.marca.nome;
+    }
+
+    ligarEventos();
+    atualizarTopo();
+  }
+
+  // Exposto para testes e integra\u00e7\u00f5es
+  window.Calculadora = { estado: estado };
+
+  iniciar();
+})();
+
+</script>
