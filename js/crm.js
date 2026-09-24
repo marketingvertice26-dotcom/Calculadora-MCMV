@@ -157,8 +157,68 @@ window.CRM = (function () {
         parcelaMaximaConsiderada: est.parcelaMaxima ? Math.round(est.parcelaMaxima) : null
       },
 
-      resumoCorretor: resumoCorretor(estado)
+      resumoCorretor: resumoCorretor(estado),
+
+      // Os mesmos dados numa lista simples, fácil de mapear no GoHighLevel
+      // (Inbound Webhook) ou em qualquer CRM que não lê JSON aninhado.
+      campos: camposPlanos(estado, evento)
     };
+  }
+
+  function telefoneE164(numero, ddi) {
+    const d = String(numero || '').replace(/\D/g, '');
+    if (!d) return null;
+    if ((d.length === 12 || d.length === 13) && d.indexOf(ddi) === 0) return '+' + d;
+    return '+' + ddi + d;
+  }
+
+  function camposPlanos(estado, evento) {
+    const cfg = window.CALC_CONFIG;
+    const r = estado.respostas;
+    const est = estado.estimativa || {};
+    const tempo = estado.tempoCalculado || {};
+    const proj = {};
+    (estado.projecao || []).forEach(function (p) { proj[p.anos] = Math.round(p.valor); });
+    const nome = estado.lead.nome || '';
+    const arred = function (v) { return v ? Math.round(v) : ''; };
+
+    const c = {
+      evento: evento,
+      nome: nome,
+      primeiro_nome: nome.split(' ')[0] || '',
+      sobrenome: nome.split(' ').slice(1).join(' '),
+      telefone: telefoneE164(estado.lead.whatsapp, cfg.crm.ddiPadrao || '55') || '',
+      renda_familiar: estado.lead.renda || '',
+      aluguel_mensal: r.aluguel || '',
+      tempo_aluguel: textoTempo(tempo.meses) + (tempo.origem === 'faixa' ? ' (aprox.)' : ''),
+      tempo_aluguel_meses: tempo.meses || '',
+      total_pago_aluguel: arred(estado.totalPago),
+      tem_entrada: ROTULOS.simNao[r.entradaResposta] || '',
+      valor_entrada: r.entradaResposta === 'sim' ? r.entradaValor : '',
+      tem_fgts: ROTULOS.simNao[r.fgtsResposta] || '',
+      valor_fgts: r.fgtsResposta === 'sim' ? (r.fgtsValor || '') : '',
+      pessoas_familia: r.pessoas === 5 ? '5 ou mais' : (r.pessoas || ''),
+      possui_imovel: r.possuiImovel == null ? '' : (r.possuiImovel ? 'Sim' : 'Não'),
+      objetivo: ROTULOS.objetivo[r.objetivo] || '',
+      ja_tentou_financiar: ROTULOS.jaFinanciou[r.jaFinanciou] || '',
+      momento_compra: ROTULOS.momento[r.momento] || '',
+      prazo_decisao: ROTULOS.prazo[r.prazo] || '',
+      pronto_para_seguir: ROTULOS.pronto[r.pronto] || '',
+      temperatura: estado.temperatura ? ROTULOS.temperatura[estado.temperatura.nivel] : '',
+      pontuacao: estado.temperatura ? estado.temperatura.pontos : '',
+      projecao_5_anos: proj[5] || '',
+      projecao_10_anos: proj[10] || '',
+      projecao_20_anos: proj[20] || '',
+      status_estimativa: est.status || '',
+      faixa_imovel: est.status === 'estimado' ? textoFaixa(est.faixaImovel) : '',
+      faixa_financiamento: est.faixaFinanciamento ? textoFaixa(est.faixaFinanciamento) : '',
+      parcela_estimada: arred(est.parcelaEstimada),
+      entrada_estimada: arred(est.entradaNecessaria),
+      complemento_entrada: arred(est.complementoEntrada),
+      resumo_corretor: resumoCorretor(estado)
+    };
+    Object.keys(estado.rastreio || {}).forEach(function (k) { c[k] = estado.rastreio[k]; });
+    return c;
   }
 
   /* ---------- Resumo em texto para o corretor ---------- */
@@ -229,7 +289,8 @@ window.CRM = (function () {
       return Promise.resolve({ ok: true, simulado: true, payload: payload });
     }
 
-    const corpo = JSON.stringify(payload);
+    // O JSON leva os campos planos no primeiro nível também, para facilitar o mapeamento
+    const corpo = JSON.stringify(Object.assign({}, payload.campos, payload));
     return fetch(cfg.crm.webhookUrl, {
       method: 'POST',
       headers: Object.assign({ 'Content-Type': 'application/json' }, cfg.crm.headers || {}),
@@ -238,8 +299,19 @@ window.CRM = (function () {
     }).then(function (res) {
       return { ok: res.ok, status: res.status, payload: payload };
     }).catch(function (erro) {
-      console.warn('[Calculadora] falha ao enviar ao CRM', erro);
-      return { ok: false, erro: erro, payload: payload };
+      if (!cfg.crm.reenviarComoFormularioSeBloquear) {
+        console.warn('[Calculadora] falha ao enviar ao CRM', erro);
+        return { ok: false, erro: erro, payload: payload };
+      }
+      // Plano B: formulário simples não passa pela checagem de CORS do navegador
+      const form = new URLSearchParams();
+      Object.keys(payload.campos).forEach(function (k) { form.append(k, payload.campos[k]); });
+      return fetch(cfg.crm.webhookUrl, { method: 'POST', mode: 'no-cors', body: form, keepalive: true })
+        .then(function () { return { ok: true, formulario: true, payload: payload }; })
+        .catch(function (erro2) {
+          console.warn('[Calculadora] falha ao enviar ao CRM', erro2);
+          return { ok: false, erro: erro2, payload: payload };
+        });
     });
   }
 

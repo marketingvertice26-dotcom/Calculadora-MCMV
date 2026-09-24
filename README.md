@@ -28,6 +28,24 @@ Feita em HTML, CSS e JavaScript puros. Não precisa de instalação nem de build
 9. Tela de cálculo
 10. Resultado: até hoje x próximo passo, os dois cenários, mensagem personalizada, projeção de longo prazo, fatores que influenciam e CTA
 
+## Usar no GoHighLevel
+
+Existem dois caminhos.
+
+**Caminho A: colar o código pronto (recomendado, fica idêntico à prévia)**
+1. No funil da LP, crie um novo passo (página) só para a calculadora
+2. Adicione uma seção de largura total e, dentro dela, o elemento **Código personalizado** (Custom JS/HTML)
+3. Abra o arquivo `dist/calculadora-ghl.html`, copie tudo e cole no elemento
+4. Antes de colar, procure por `webhookUrl` e `whatsappNumero` e preencha
+5. No formulário da LP, configure o envio para abrir a página da calculadora, de preferência com `?nome=...&whatsapp=...&renda=...` na URL. Se o GHL não passar esses dados, a calculadora pergunta renda, nome e WhatsApp
+
+Para o lead cair no CRM: crie um Workflow com o gatilho **Inbound Webhook**, copie a URL gerada para `webhookUrl` e use a ação **Create/Update Contact** para mapear os campos (`telefone`, `primeiro_nome`, `temperatura`, `faixa_imovel`, `resumo_corretor` etc). Os campos chegam numa lista simples, sem nada aninhado.
+
+Sempre que mudar algo em `index.html`, `css/` ou `js/`, gere de novo o arquivo com `python3 tools/gerar-ghl.py`.
+
+**Caminho B: pedir para a IA do GoHighLevel montar**
+O prompt completo está em `docs/prompt-gohighlevel.md`. A IA do GHL costuma entregar uma versão mais simples, por isso o caminho A é o mais fiel.
+
 ## 1. Como a LP passa os dados
 
 A calculadora lê nome, WhatsApp e renda de duas formas. Use a que for mais fácil.

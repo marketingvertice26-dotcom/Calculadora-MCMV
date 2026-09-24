@@ -15,7 +15,7 @@
   /* ---------- Estado ---------- */
 
   const estado = {
-    lead: { nome: '', whatsapp: '', renda: 0, rendaPerguntadaAqui: false },
+    lead: { nome: '', whatsapp: '', renda: 0, rendaPerguntadaAqui: false, contatoPerguntadoAqui: false },
     rastreio: {},
     respostas: {
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0,
@@ -114,7 +114,10 @@
     const fluxo = ['intro'];
     if (!estado.lead.renda) fluxo.push('renda');
     fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'jaFinanciou',
-      'objetivo', 'momento', 'prazo', 'pronto', 'calculando', 'resultado');
+      'objetivo', 'momento', 'prazo', 'pronto');
+    // Rede de segurança: se a LP não mandou o WhatsApp, pergunta antes do resultado
+    if (!estado.lead.whatsapp || estado.lead.contatoPerguntadoAqui) fluxo.push('contato');
+    fluxo.push('calculando', 'resultado');
     estado.fluxo = fluxo;
   }
 
@@ -142,7 +145,9 @@
     nova.classList.add('ativa');
     estado.telaAtual = destino;
 
-    window.scrollTo({ top: 0, behavior: reduzirMovimento ? 'auto' : 'smooth' });
+    // Sobe até o início da calculadora (que pode estar no meio de uma página, como no GoHighLevel)
+    const inicio = $('#app').getBoundingClientRect().top + window.pageYOffset;
+    window.scrollTo({ top: Math.max(0, inicio), behavior: reduzirMovimento ? 'auto' : 'smooth' });
     atualizarTopo();
     aoEntrar(destino);
 
@@ -217,6 +222,16 @@
       if (v <= 0) return erro('renda', 'Informe a renda mensal da família para continuar.');
       estado.lead.renda = v;
       estado.lead.rendaPerguntadaAqui = true;
+      return true;
+    },
+    contato: function () {
+      const nome = $('#inNome').value.trim();
+      const whats = $('#inWhatsapp').value.replace(/\D/g, '');
+      if (nome.length < 2) return erro('contato', 'Informe seu nome para continuar.');
+      if (whats.length < 10 || whats.length > 13) return erro('contato', 'Confira o número de WhatsApp com DDD.');
+      estado.lead.nome = nome.split(/\s+/).map(capitalizar).join(' ');
+      estado.lead.whatsapp = whats;
+      estado.lead.contatoPerguntadoAqui = true;
       return true;
     },
     aluguel: function () {
@@ -590,8 +605,9 @@
     });
     // Se a renda foi perguntada aqui, pergunta de novo
     if (estado.lead.rendaPerguntadaAqui) { estado.lead.renda = 0; estado.lead.rendaPerguntadaAqui = false; }
+    if (estado.lead.contatoPerguntadoAqui) { estado.lead.nome = ''; estado.lead.whatsapp = ''; estado.lead.contatoPerguntadoAqui = false; }
     estado.enviado = false;
-    $$('input').forEach(function (i) { i.value = ''; });
+    $$('#app input').forEach(function (i) { i.value = ''; });
     $$('.opcao.selecionada').forEach(function (o) { o.classList.remove('selecionada'); o.setAttribute('aria-pressed', 'false'); });
     $$('.revela').forEach(function (r) { r.hidden = true; });
     $$('.dica-viva').forEach(function (d) { d.textContent = ''; });
@@ -652,6 +668,15 @@
         inp.value = formatarMilhar(n);
         if (inp.id === 'inAluguel') atualizarDicaAluguel();
       });
+    });
+
+    // Máscara de telefone: (11) 99999-9999
+    $('#inWhatsapp').addEventListener('input', function () {
+      const d = this.value.replace(/\D/g, '').slice(0, 11);
+      let v = d;
+      if (d.length > 2) v = '(' + d.slice(0, 2) + ') ' + d.slice(2);
+      if (d.length > 7) v = '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4);
+      this.value = v;
     });
 
     ['#inAnos', '#inMeses'].forEach(function (sel) {

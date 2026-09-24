@@ -246,6 +246,22 @@
         </div>
       </section>
 
+      <!-- CONTATO (só aparece se nome/WhatsApp não vieram da LP) -->
+      <section class="tela" data-tela="contato" data-etapa>
+        <p class="kicker">Seu diagnóstico está pronto</p>
+        <h2 class="pergunta">Para onde enviamos o seu resultado?</h2>
+        <label class="campo-texto">
+          <span>Seu nome</span>
+          <input type="text" autocomplete="name" placeholder="Como podemos te chamar?" id="inNome">
+        </label>
+        <label class="campo-texto">
+          <span>Seu WhatsApp</span>
+          <input type="tel" inputmode="numeric" autocomplete="tel" placeholder="(11) 99999-9999" id="inWhatsapp">
+        </label>
+        <p class="apoio-mini">Usamos só para um especialista falar com você sobre o seu cenário.</p>
+        <button class="btn-principal" type="button" data-acao="continuar" data-valida="contato">Ver meu resultado</button>
+      </section>
+
       <!-- CALCULANDO -->
       <section class="tela tela-calculando" data-tela="calculando">
         <div class="loader" aria-hidden="true"><span></span></div>

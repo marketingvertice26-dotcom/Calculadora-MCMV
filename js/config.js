@@ -143,6 +143,13 @@ window.CALC_CONFIG = {
     // Cabeçalhos extras (ex.: token do CRM)
     headers: {},
 
+    // Se o navegador bloquear o envio em JSON (CORS), manda de novo como
+    // formulário simples, só com os campos planos. Deixe true no GoHighLevel.
+    reenviarComoFormularioSeBloquear: true,
+
+    // DDI adicionado ao WhatsApp no campo "telefone" (formato +5511999999999)
+    ddiPadrao: '55',
+
     // Envia os dados assim que o resultado aparece (garante o lead mesmo
     // que a pessoa não clique no CTA). O clique no CTA envia de novo com
     // o evento "cta_especialista".
