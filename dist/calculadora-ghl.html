@@ -325,28 +325,6 @@
 
 #calc-mcmv #inFgts::placeholder { font-size: 18px; font-weight: 600; }
 
-#calc-mcmv .campo-texto { display: block; margin-bottom: 14px; }
-
-#calc-mcmv .campo-texto span { display: block; margin: 0 0 6px 4px; font-size: 14px; font-weight: 700; color: var(--texto-2); }
-
-#calc-mcmv .campo-texto input {
-  width: 100%;
-  min-height: 60px;
-  padding: 0 18px;
-  border: 2px solid var(--borda);
-  border-radius: var(--raio);
-  background: var(--card);
-  color: var(--texto);
-  font-size: 18px;
-  font-weight: 600;
-  outline: 0;
-  box-shadow: var(--sombra);
-}
-
-#calc-mcmv .campo-texto input:focus { border-color: var(--verde-500); box-shadow: 0 0 0 4px var(--verde-100); }
-
-#calc-mcmv .apoio-mini { margin: 4px 4px 0; font-size: 13px; color: var(--texto-3); }
-
 #calc-mcmv .dica-viva { min-height: 24px; margin: 12px 4px 0; color: var(--texto-2); font-size: 15px; }
 
 #calc-mcmv .dica-viva strong { color: var(--verde-600); }
@@ -1217,22 +1195,6 @@
           <button type="button" class="opcao" data-valor="conversar-familia">Preciso conversar com a fam&#xed;lia</button>
           <button type="button" class="opcao" data-valor="so-entender">Por enquanto s&#xf3; quero entender</button>
         </div>
-      </section>
-
-      <!-- CONTATO (s&#xf3; aparece se nome/WhatsApp n&#xe3;o vieram da LP) -->
-      <section class="tela" data-tela="contato" data-etapa>
-        <p class="kicker">Seu diagn&#xf3;stico est&#xe1; pronto</p>
-        <h2 class="pergunta">Para onde enviamos o seu resultado?</h2>
-        <label class="campo-texto">
-          <span>Seu nome</span>
-          <input type="text" autocomplete="name" placeholder="Como podemos te chamar?" id="inNome">
-        </label>
-        <label class="campo-texto">
-          <span>Seu WhatsApp</span>
-          <input type="tel" inputmode="numeric" autocomplete="tel" placeholder="(11) 99999-9999" id="inWhatsapp">
-        </label>
-        <p class="apoio-mini">Usamos s&#xf3; para um especialista falar com voc&#xea; sobre o seu cen&#xe1;rio.</p>
-        <button class="btn-principal" type="button" data-acao="continuar" data-valida="contato">Ver meu resultado</button>
       </section>
 
       <!-- CALCULANDO -->
@@ -2158,7 +2120,7 @@ window.CRM = (function () {
   /* ---------- Estado ---------- */
 
   const estado = {
-    lead: { nome: '', whatsapp: '', renda: 0, rendaPerguntadaAqui: false, contatoPerguntadoAqui: false },
+    lead: { nome: '', whatsapp: '', renda: 0, rendaPerguntadaAqui: false },
     rastreio: {},
     respostas: {
       aluguel: 0, tempoFaixa: null, anos: 0, meses: 0,
@@ -2257,10 +2219,7 @@ window.CRM = (function () {
     const fluxo = ['intro'];
     if (!estado.lead.renda) fluxo.push('renda');
     fluxo.push('aluguel', 'tempo', 'passado', 'futuro', 'entrada', 'fgts', 'familia', 'imovel', 'jaFinanciou',
-      'objetivo', 'momento', 'prazo', 'pronto');
-    // Rede de seguran\u00e7a: se a LP n\u00e3o mandou o WhatsApp, pergunta antes do resultado
-    if (!estado.lead.whatsapp || estado.lead.contatoPerguntadoAqui) fluxo.push('contato');
-    fluxo.push('calculando', 'resultado');
+      'objetivo', 'momento', 'prazo', 'pronto', 'calculando', 'resultado');
     estado.fluxo = fluxo;
   }
 
@@ -2365,16 +2324,6 @@ window.CRM = (function () {
       if (v <= 0) return erro('renda', 'Informe a renda mensal da fam\u00edlia para continuar.');
       estado.lead.renda = v;
       estado.lead.rendaPerguntadaAqui = true;
-      return true;
-    },
-    contato: function () {
-      const nome = $('#inNome').value.trim();
-      const whats = $('#inWhatsapp').value.replace(/\D/g, '');
-      if (nome.length < 2) return erro('contato', 'Informe seu nome para continuar.');
-      if (whats.length < 10 || whats.length > 13) return erro('contato', 'Confira o n\u00famero de WhatsApp com DDD.');
-      estado.lead.nome = nome.split(/\s+/).map(capitalizar).join(' ');
-      estado.lead.whatsapp = whats;
-      estado.lead.contatoPerguntadoAqui = true;
       return true;
     },
     aluguel: function () {
@@ -2748,7 +2697,6 @@ window.CRM = (function () {
     });
     // Se a renda foi perguntada aqui, pergunta de novo
     if (estado.lead.rendaPerguntadaAqui) { estado.lead.renda = 0; estado.lead.rendaPerguntadaAqui = false; }
-    if (estado.lead.contatoPerguntadoAqui) { estado.lead.nome = ''; estado.lead.whatsapp = ''; estado.lead.contatoPerguntadoAqui = false; }
     estado.enviado = false;
     $$('#app input').forEach(function (i) { i.value = ''; });
     $$('.opcao.selecionada').forEach(function (o) { o.classList.remove('selecionada'); o.setAttribute('aria-pressed', 'false'); });
@@ -2811,15 +2759,6 @@ window.CRM = (function () {
         inp.value = formatarMilhar(n);
         if (inp.id === 'inAluguel') atualizarDicaAluguel();
       });
-    });
-
-    // M\u00e1scara de telefone: (11) 99999-9999
-    $('#inWhatsapp').addEventListener('input', function () {
-      const d = this.value.replace(/\D/g, '').slice(0, 11);
-      let v = d;
-      if (d.length > 2) v = '(' + d.slice(0, 2) + ') ' + d.slice(2);
-      if (d.length > 7) v = '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4);
-      this.value = v;
     });
 
     ['#inAnos', '#inMeses'].forEach(function (sel) {

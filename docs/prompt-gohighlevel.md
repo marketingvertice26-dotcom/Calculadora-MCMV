@@ -23,7 +23,6 @@ Ler da URL os parâmetros nome, whatsapp e renda (exemplo: ?nome=Ana&whatsapp=11
 Se já existir contato identificado no GoHighLevel, usar os dados dele.
 Não perguntar de novo o que já veio.
 Se a renda não vier, perguntar antes da etapa 1: "Qual é a renda mensal da sua família?"
-Se o WhatsApp não vier, perguntar antes do resultado: "Para onde enviamos o seu resultado?", com campos Nome e WhatsApp (máscara (11) 99999-9999).
 
 SEQUÊNCIA DE TELAS
 

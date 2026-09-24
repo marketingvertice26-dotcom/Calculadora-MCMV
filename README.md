@@ -37,7 +37,7 @@ Existem dois caminhos.
 2. Adicione uma seção de largura total e, dentro dela, o elemento **Código personalizado** (Custom JS/HTML)
 3. Abra o arquivo `dist/calculadora-ghl.html`, copie tudo e cole no elemento
 4. Antes de colar, procure por `webhookUrl` e `whatsappNumero` e preencha
-5. No formulário da LP, configure o envio para abrir a página da calculadora, de preferência com `?nome=...&whatsapp=...&renda=...` na URL. Se o GHL não passar esses dados, a calculadora pergunta renda, nome e WhatsApp
+5. No formulário da LP, configure o envio para abrir a página da calculadora, de preferência com `?nome=...&whatsapp=...&renda=...` na URL. Se a renda não chegar, a calculadora pergunta. Nome e WhatsApp precisam vir da LP para o lead chegar completo ao CRM
 
 Para o lead cair no CRM: crie um Workflow com o gatilho **Inbound Webhook**, copie a URL gerada para `webhookUrl` e use a ação **Create/Update Contact** para mapear os campos (`telefone`, `primeiro_nome`, `temperatura`, `faixa_imovel`, `resumo_corretor` etc). Os campos chegam numa lista simples, sem nada aninhado.
 
